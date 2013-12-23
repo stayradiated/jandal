@@ -29,10 +29,27 @@
     this.index = 0;
   };
 
+
+  /*
+   * Register
+   *
+   * - fn (function) : the callback
+   * > callback id (int)
+   */ 
+
   Callbacks.prototype.register = function (fn) {
     this.collection[this.index] = fn;
     return this.index++;
   };
+
+
+  /*
+   * Exec
+   * Deletes the callback afterwards so it can only be executed once.
+   *
+   * - id (int) : callback id
+   * - args (array) : arguments
+   */
 
   Callbacks.prototype.exec = function (id, args) {
     this.collection[id].apply(this, args);
@@ -59,6 +76,14 @@
   util.inherits(Namespace, EventEmitter);
   Namespace.prototype._emit = EventEmitter.prototype.emit;
 
+
+  /*
+   * Emit
+   *
+   * - event (string)
+   * - args... (mixed) : any other data you want to send
+   */
+
   Namespace.prototype.emit = function (event) {
     var args;
 
@@ -67,6 +92,7 @@
 
     this.jandal.emit.apply(this.jandal, args);
   };
+
 
 
   /*
@@ -127,6 +153,7 @@
    * (Private) Callback
    *
    * - id (int) : the callback id
+   * > function
    */
 
   Jandal.prototype._callback = function (id) {
@@ -141,8 +168,10 @@
 
   /*
    * Namespace
+   * If the namespace already exists it will be used instead
    *
    * - name (string)
+   * > namespace
    */
 
   Jandal.prototype.namespace = function (name) {
@@ -227,6 +256,9 @@
 
   /*
    * Send a message through the socket
+   *
+   * - event (string)
+   * - args... (mixed) : any data you want to send
    */
 
   Jandal.prototype.emit = function (event) {
