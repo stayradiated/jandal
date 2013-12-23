@@ -3,7 +3,15 @@
   'use strict';
 
   var Jandal, Namespace, Callbacks, jandalHandles,
-      EventEmitter, inherits, EVENT_ARGS, NS_EVENT, CALLBACK;
+      EventEmitter, inherits, root, previousJandal,
+      EVENT_ARGS, NS_EVENT, CALLBACK;
+
+  /*
+   * Setup
+   */
+
+  root = this;
+  previousJandal = root.Jandal;
 
   /*
    * Dependencies
@@ -185,6 +193,19 @@
 
 
   /*
+   * (Static) noConflict
+   *
+   * > this
+   */
+
+  Jandal.noConflict = function () {
+    root.Jandal = previousJandal;
+    return Jandal;
+  };
+
+
+
+  /*
    * (Private) Process
    * Processes messages received on the socket
    *
@@ -193,8 +214,6 @@
 
   Jandal.prototype._process = function (data) {
     var message, namespace, callback;
-
-    console.log(data);
 
     message = this.parse(data);
 
@@ -205,7 +224,6 @@
 
     message.args.unshift(message.event);
     namespace = this.namespaces[message.namespace];
-
 
     if (message.namespace && namespace) {
       namespace._emit.apply(namespace, message.args);
@@ -230,9 +248,6 @@
       self.emit.apply(self, args);
     };
   };
-
-
-
 
 
   /*
@@ -345,7 +360,6 @@
       return this._emit.apply(this, arguments);
     }
 
-
     Jandal._handle.write(this.socket, this.serialize({
       event: event,
       args: Array.prototype.slice.call(arguments, 1)
@@ -353,6 +367,14 @@
   };
 
 
-  module.exports = Jandal;
+  /*
+   * Exporting Jandal through module.exports or window.Jandal
+   */
 
-}());
+  if (typeof module !== 'undefined') {
+    module.exports = Jandal;
+  } else {
+    root.Jandal = Jandal;
+  }
+
+}).call(this);

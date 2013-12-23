@@ -1,7 +1,7 @@
 {
   "name": "jandal",
-  "version": "0.0.2",
-  "description": "Event wrapper for SockJS",
+  "version": "0.0.3",
+  "description": "Manage events and callbacks over a socket connection",
   "main": "jandal.js",
   "scripts": {
     "test": "mocha test"
@@ -11,8 +11,7 @@
     "url": "https://github.com/stayradiated/jandal.git"
   },
   "keywords": [
-    "Event",
-    "SockJS"
+    "websocket", "sockjs", "event", "socket", "message", "emit", "listen"
   ],
   "author": "George Czabania",
   "license": "BSD-2-Clause",
