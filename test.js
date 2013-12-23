@@ -260,5 +260,62 @@ describe('Jandal', function () {
 
   });
 
+// ----------------------------------------------------------------------------
+// CALLBACKS
+// ----------------------------------------------------------------------------
+
+  it('should convert functions into callback handlers', function () {
+
+    var fn;
+
+    fn = function () { };
+
+    jandal.emit('event', fn);
+    expect('event("__fn__0")');
+
+    jandal.emit('event', fn);
+    expect('event("__fn__1")');
+
+  });
+
+  it('should trigger callbacks', function () {
+
+    jandal.on('event', function (callback) {
+      callback.should.have.type('function');
+      callback();
+    });
+
+    socket.reply('event("__fn__20")');
+    expect('__fn__20()');
+
+  });
+
+  it('should trigger callback with arguments', function () {
+
+    jandal.on('event', function (callback) {
+      callback('hello', 'world');
+    });
+
+    socket.reply('event("__fn__101")');
+    expect('__fn__101("hello","world")');
+
+  });
+
+  it('should run callbacks', function (done) {
+
+    var fn;
+
+    fn = function (a, b) {
+      a.should.equal('some');
+      b.should.equal('arguments');
+      done()
+    };
+
+    jandal.emit('event', fn);
+
+    socket.reply('__fn__0("some","arguments")');
+
+  });
+
 
 });

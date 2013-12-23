@@ -2,8 +2,7 @@
 
   'use strict';
 
-  var Jandal, Namespace, EventEmitter, util;
-
+  var Jandal, Namespace, Callbacks, EventEmitter, util, REGEX, CALLBACK;
 
   /*
    * Dependencies
@@ -11,6 +10,34 @@
 
   EventEmitter = require('events').EventEmitter;
   util = require('util');
+
+
+  /*
+   * Constants
+   */
+
+  REGEX = /^(\w+\.)?(\w+)\((.*)\)$/;
+  CALLBACK = /__fn__(\d+)/;
+
+
+  /*
+   * Callbacks Constructor
+   */
+
+  Callbacks = function () {
+    this.collection = {};
+    this.index = 0;
+  };
+
+  Callbacks.prototype.register = function (fn) {
+    this.collection[this.index] = fn;
+    return this.index++;
+  };
+
+  Callbacks.prototype.exec = function (id, args) {
+    this.collection[id].apply(this, args);
+    delete this.collection[id];
+  };
 
 
   /*
@@ -51,6 +78,7 @@
 
     this.socket = socket;
     this.namespaces = {};
+    this.callbacks = new Callbacks();
 
     var self = this;
     this.socket.on('data', function (data) {
@@ -74,17 +102,40 @@
    */
 
   Jandal.prototype._handle = function (data) {
-    var message, namespace;
+    var message, namespace, callback;
 
     message = this.parse(data);
+
+    callback = message.event.match(CALLBACK);
+    if (callback) {
+      return this.callbacks.exec(callback[1], message.args);
+    }
+
     message.args.unshift(message.event);
     namespace = this.namespaces[message.namespace];
+
 
     if (message.namespace && namespace) {
       namespace._emit.apply(namespace, message.args);
     } else {
       this._emit.apply(this, message.args);
     }
+  };
+
+
+  /*
+   * (Private) Callback
+   *
+   * - id (int) : the callback id
+   */
+
+  Jandal.prototype._callback = function (id) {
+    var self = this;
+    return function () {
+      var args = Array.prototype.slice.call(arguments);
+      args.unshift('__fn__' + id);
+      self.emit.apply(self, args);
+    };
   };
 
 
@@ -116,10 +167,20 @@
    */
 
   Jandal.prototype.serialize = function (message) {
-    var string, args;
+    var string, args, len, i, arg;
+
+    args = message.args;
+    len = args.length;
+
+    for (i = 0; i < len; i++) {
+      arg = args[i];
+      if (typeof arg === 'function') {
+        args[i] = '__fn__' + this.callbacks.register(arg);
+      }
+    };
 
     string = message.event + '(';
-    args = JSON.stringify(message.args);
+    args = JSON.stringify(args);
     string += args.slice(1, -1) + ')';
 
     return string;
@@ -134,15 +195,26 @@
    */
 
   Jandal.prototype.parse = function (message) {
-    var namespace, args;
-    var regex = /^(\w+\.)?(\w+)\((.*)\)$/;
+    var namespace, args, len, i, arg, match;
 
-    message = message.match(regex);
+    message = message.match(REGEX);
 
     namespace = message[1];
     namespace = namespace ? namespace.slice(0, -1) : false;
 
     args = JSON.parse('[' + message[3] + ']');
+    len = args.length;
+
+    // Replace callback ids with functions
+    for (i = 0; i < len; i++) {
+      arg = args[i];
+      if (typeof arg === 'string') {
+        match = arg.match(CALLBACK);
+        if (match) {
+          args[i] = this._callback(match[1]);
+        }
+      }
+    }
 
     return {
       namespace: namespace,
@@ -163,6 +235,7 @@
     if (event === 'newListener' || event === 'removeListener') {
       return this._emit.apply(this, arguments);
     }
+
 
     this.socket.write(this.serialize({
       event: event,
