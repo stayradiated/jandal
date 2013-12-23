@@ -2,22 +2,69 @@
 
   'use strict';
 
-  var Jandal, Namespace, Callbacks, EventEmitter, util, REGEX, CALLBACK;
+  var Jandal, Namespace, Callbacks, jandalHandles,
+      EventEmitter, inherits, EVENT_ARGS, NS_EVENT, CALLBACK;
 
   /*
    * Dependencies
    */
-
+  
   EventEmitter = require('events').EventEmitter;
-  util = require('util');
+
+
+  /*
+   * util.inheris
+   */
+
+  inherits = function(ctor, superCtor) {
+    ctor.super_ = superCtor;
+    ctor.prototype = Object.create(superCtor.prototype, {
+      constructor: {
+        value: ctor,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }
+    });
+  };
 
 
   /*
    * Constants
    */
 
-  REGEX = /^(\w+\.)?(\w+)\((.*)\)$/;
+  EVENT_ARGS = /^([^\(]+)\((.*)\)$/;
+  NS_EVENT = /^([\w-]+\.)?([^\(]+)$/;
   CALLBACK = /__fn__(\d+)/;
+
+
+  /*
+   * Can you handle the jandal?
+   */
+
+  jandalHandles = {
+
+    node: {
+      write: function (socket, message) {
+        socket.write(message);
+      },
+      read: function (socket, fn) {
+        socket.on('data', fn);
+      }
+    },
+
+    sockjs: {
+      write: function (socket, message) {
+        socket.send(message);
+      },
+      read: function (socket, fn) {
+        socket.onmessage = function (e) {
+          fn(e.data);
+        };
+      }
+    }
+
+  };
 
 
   /*
@@ -35,7 +82,7 @@
    *
    * - fn (function) : the callback
    * > callback id (int)
-   */ 
+   */
 
   Callbacks.prototype.register = function (fn) {
     this.collection[this.index] = fn;
@@ -62,7 +109,7 @@
    */
 
   Namespace = function (name, jandal) {
-    EventEmitter.call(this);
+    Namespace.super_.call(this);
 
     this.name = name;
     this.jandal = jandal;
@@ -73,7 +120,7 @@
    * Inherit from EventEmitter
    */
 
-  util.inherits(Namespace, EventEmitter);
+  inherits(Namespace, EventEmitter);
   Namespace.prototype._emit = EventEmitter.prototype.emit;
 
 
@@ -100,15 +147,15 @@
    */
 
   Jandal = function (socket) {
-    EventEmitter.call(this);
+    Jandal.super_.call(this);
 
     this.socket = socket;
     this.namespaces = {};
     this.callbacks = new Callbacks();
 
     var self = this;
-    this.socket.on('data', function (data) {
-      self._handle(data);
+    Jandal._handle.read(this.socket, function (message) {
+      self._process(message);
     });
   };
 
@@ -117,18 +164,37 @@
    * Inherit from EventEmitter
    */
 
-  util.inherits(Jandal, EventEmitter);
+  inherits(Jandal, EventEmitter);
   Jandal.prototype._emit = EventEmitter.prototype.emit;
 
 
   /*
-   * (Private) Handle
+   * (Static) Handle
+   * Choose how to attach to the socket
+   *
+   * - name (string) : a key from jandalHandles (currently 'node' or 'sockjs')
+   */
+
+  Jandal.handle = function (name) {
+    var handle = jandalHandles[name];
+    if (! handle) {
+      throw new Error('Jandal handler "' + name + '"could not be found');
+    }
+    this._handle = handle;
+  };
+
+
+  /*
+   * (Private) Process
+   * Processes messages received on the socket
    *
    * - data (string)
    */
 
-  Jandal.prototype._handle = function (data) {
+  Jandal.prototype._process = function (data) {
     var message, namespace, callback;
+
+    console.log(data);
 
     message = this.parse(data);
 
@@ -164,6 +230,9 @@
       self.emit.apply(self, args);
     };
   };
+
+
+
 
 
   /*
@@ -206,7 +275,7 @@
       if (typeof arg === 'function') {
         args[i] = '__fn__' + this.callbacks.register(arg);
       }
-    };
+    }
 
     string = message.event + '(';
     args = JSON.stringify(args);
@@ -224,14 +293,22 @@
    */
 
   Jandal.prototype.parse = function (message) {
-    var namespace, args, len, i, arg, match;
+    var namespace, event, args, len, i, arg, match;
 
-    message = message.match(REGEX);
+    match = message.match(EVENT_ARGS);
 
-    namespace = message[1];
+    if (! match) {
+      throw new Error('Could not parse', message);
+    }
+
+    args  = match[2];
+    match = match[1].match(NS_EVENT);
+    event = match[2];
+
+    namespace = match[1];
     namespace = namespace ? namespace.slice(0, -1) : false;
 
-    args = JSON.parse('[' + message[3] + ']');
+    args = JSON.parse('[' + args + ']');
     len = args.length;
 
     // Replace callback ids with functions
@@ -247,7 +324,7 @@
 
     return {
       namespace: namespace,
-      event: message[2],
+      event: event,
       args: args
     };
 
@@ -269,7 +346,7 @@
     }
 
 
-    this.socket.write(this.serialize({
+    Jandal._handle.write(this.socket, this.serialize({
       event: event,
       args: Array.prototype.slice.call(arguments, 1)
     }));

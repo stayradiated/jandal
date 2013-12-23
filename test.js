@@ -3,6 +3,9 @@ var Jandal, createSocket, should;
 Jandal = require('./jandal');
 should = require('should');
 
+// Use node bindings
+Jandal.handle('node');
+
 createSocket = function () {
   return {
     last: null,
