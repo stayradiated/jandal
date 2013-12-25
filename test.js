@@ -1,6 +1,6 @@
 var Jandal, createSocket, should;
 
-Jandal = require('./jandal');
+Jandal = require('./source/jandal');
 should = require('should');
 
 // Use node bindings
@@ -311,7 +311,7 @@ describe('Jandal', function () {
     fn = function (a, b) {
       a.should.equal('some');
       b.should.equal('arguments');
-      done()
+      done();
     };
 
     jandal.emit('event', fn);
