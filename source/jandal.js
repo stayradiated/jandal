@@ -18,7 +18,7 @@
   /*
    * Dependencies
    */
-  
+
   EventEmitter = require('events').EventEmitter;
   jandalHandles = require('./handles');
   Namespace = require('./namespace');
