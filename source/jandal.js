@@ -145,14 +145,10 @@
 
   Jandal.prototype.namespace = function (name) {
     var namespace;
-
     namespace = this.namespaces[name];
-
     if (! namespace) {
-      namespace = new Namespace(name, this);
-      this.namespaces[name] = namespace;
+      namespace = this.namespaces[name] = new Namespace(name, this);
     }
-
     return namespace;
   };
 
