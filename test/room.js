@@ -84,6 +84,28 @@ describe('Room', function () {
     room.length().should.equal(0);
   });
 
+  it('check if a socket is in a room', function () {
+    var room, socket;
+
+    room = Room.get('my_room');
+    socket = newSocket();
+
+    room.join(socket);
+    room.contains(socket).should.equal(true);
+
+    room.leave(socket);
+    room.contains(socket).should.equal(false);
+  });
+
+  it('get another room', function () {
+    var room1, room2;
+
+    room1 = Room.get('room1');
+    room2 = Room.get('room2');
+
+    room1.in('room2').should.equal(room2);
+  });
+
   it('emit to all sockets in a room', function () {
     var room, socket1, socket2, callCount;
 
