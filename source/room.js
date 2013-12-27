@@ -92,7 +92,7 @@
     var index;
     index = this.sockets.indexOf(socket);
     if (index > -1) {
-      this.sockets.slice(index, 1);
+      this.sockets.splice(index, 1);
     }
   };
 
@@ -198,6 +198,16 @@
       }
     }
     return false;
+  };
+
+
+  /*
+   * Destroy
+   * Remove the room
+   */
+
+  Room.prototype.destroy = function () {
+    Room.remove(this.id);
   };
 
 
