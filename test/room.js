@@ -124,9 +124,7 @@ describe('Room', function () {
     room.length().should.equal(2);
 
     room.emit('hello');
-
     callCount.should.equal(2);
-
   });
 
   it('broadcast to all sockets in a room', function () {
@@ -150,7 +148,26 @@ describe('Room', function () {
 
     room.broadcast(sender, 'the_broadcast');
     callCount.should.equal(2);
+  });
 
+  it('emit to a room from a namespace', function () {
+    var room, socket1, socket2, namespace, callCount;
+
+    room = Room.get('room');
+    socket1 = newSocket();
+    socket2 = newSocket();
+    room.join(socket1);
+    room.join(socket2);
+    namespace = room.namespace('namespace');
+    callCount = 0;
+
+    emit = function (event) {
+      event.should.equal('namespace.event');
+      callCount++;
+    };
+
+    namespace.emit('event');
+    callCount.should.equal(2);
   });
 
 });

@@ -2,7 +2,14 @@
 
   'use strict';
 
-  var Room;
+  var Room, Namespace;
+
+
+  /*
+   * Dependencies
+   */
+
+  Namespace = require('./namespace');
 
 
   /*
