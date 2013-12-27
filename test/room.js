@@ -1,4 +1,4 @@
-var should, Room, newSocket, socketId;
+var should, Room, emit, newSocket, socketId;
 
 should = require('should');
 Room = require('../source/room');
@@ -7,14 +7,25 @@ socketId = -1;
 
 newSocket = function () {
   return {
-    id: ++socketId
+    id: ++socketId,
+    emit: function () {
+      emit.apply(this, arguments);
+    }
   };
 };
 
 describe('Room', function () {
 
   beforeEach(function () {
+
+    // Destroy all rooms
     Room.flush();
+
+    // Override this to handle emitting
+    emit = function () {
+      console.log(arguments);
+    };
+
   });
 
   it('can create rooms', function () {
@@ -71,6 +82,53 @@ describe('Room', function () {
 
     room.leave(socket);
     room.length().should.equal(0);
+  });
+
+  it('emit to all sockets in a room', function () {
+    var room, socket1, socket2, callCount;
+
+    room = Room.get('special');
+    socket1 = newSocket();
+    socket2 = newSocket();
+    callCount = 0;
+
+    emit = function (event) {
+      callCount++;
+      event.should.equal('hello');
+    };
+
+    room.join(socket1);
+    room.join(socket2);
+    room.length().should.equal(2);
+
+    room.emit('hello');
+
+    callCount.should.equal(2);
+
+  });
+
+  it('broadcast to all sockets in a room', function () {
+    var room, socket1, socket2, sender, callCount;
+
+    room = Room.get('broadcast');
+    socket1 = newSocket();
+    socket2 = newSocket();
+    sender = newSocket();
+    callCount = 0;
+
+    room.join(socket1);
+    room.join(socket2);
+    room.join(sender);
+
+    emit = function (event) {
+      event.should.equal('the_broadcast');
+      this.should.not.equal(sender);
+      callCount++;
+    };
+
+    room.broadcast(sender, 'the_broadcast');
+    callCount.should.equal(2);
+
   });
 
 });
