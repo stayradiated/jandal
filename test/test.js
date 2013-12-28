@@ -34,40 +34,6 @@ describe('Jandal', function () {
   });
 
 
-// ----------------------------------------------------------------------------
-// CREATING AND READING MESSAGES
-// ----------------------------------------------------------------------------
-
-  it('should serialize messages', function () {
-    var string;
-
-    string = jandal.serialize({
-      event: 'test',
-      args: ['one', 'two', 'three']
-    });
-    string.should.equal('test("one","two","three")');
-
-  });
-
-  it('should parse messages', function () {
-    var object;
-
-    object = {
-      namespace: 'jandal',
-      event: 'test',
-      args: ['one', 'two', 'three']
-    };
-    jandal.parse('jandal.test("one","two","three")').should.eql(object);
-
-    object = {
-      namespace: false,
-      event: 'test',
-      args: ['one', 'two', 'three']
-    };
-    jandal.parse('test("one","two","three")').should.eql(object);
-
-  });
-
 
 // ----------------------------------------------------------------------------
 // EVENTS

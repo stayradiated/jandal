@@ -2,7 +2,7 @@
 
   'use strict';
 
-  var Namespace, EventEmitter, inherits;
+  var Namespace, EventEmitter, inherits, Socket;
 
 
   /*
@@ -15,13 +15,17 @@
 
   /*
    * Namespace Constructor
+   *
+   * - name (string)
+   * - item (socket) : a single socket
+   * - item (room) : a collection of sockets
    */
 
-  Namespace = function (name, jandal) {
+  Namespace = function (name, item) {
     Namespace.super_.call(this);
 
     this.name = name;
-    this.jandal = jandal;
+    this.item = item;
   };
 
 
@@ -31,6 +35,14 @@
 
   inherits(Namespace, EventEmitter);
   Namespace.prototype._emit = EventEmitter.prototype.emit;
+
+
+  /*
+   * Resolve circular dependency with Socket
+   */
+
+  module.exports = Namespace;
+  Socket = require('./socket');
 
 
   /*
@@ -46,10 +58,35 @@
     args = Array.prototype.slice.call(arguments);
     args[0] = this.name + '.' + event;
 
-    this.jandal.emit.apply(this.jandal, args);
+    this.item.emit.apply(this.item, args);
   };
 
 
-  module.exports = Namespace;
+  /*
+   * Broadcast
+   *
+   * - event (string)
+   * - args... (mixed)
+   */
+
+  Namespace.prototype.broadcast = function (event) {
+    var args;
+
+    args = Array.prototype.slice(arguments);
+    args.unshift(item);
+    Socket.sockets.broadcast.apply(Socket.sockets, args);
+  };
+
+
+  /*
+   * Broadcast.to
+   *
+   * - room (string)
+   */
+
+  Namespace.prototype.broadcast.to = function () {
+    throw new Error('this has not been written yet');
+  };
+
 
 }());
