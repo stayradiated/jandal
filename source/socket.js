@@ -2,7 +2,7 @@
 
   'use strict';
 
-  var Socket, Namespace, Callbacks,
+  var Socket, Namespace, Callbacks, Room,
       EventEmitter, inherits,
       EVENT_ARGS, NS_EVENT, CALLBACK;
 
@@ -13,6 +13,7 @@
   EventEmitter = require('events').EventEmitter;
   Namespace = require('./namespace');
   Callbacks = require('./callbacks');
+  Room = require('./room');
   inherits = require('./util').inherits;
 
 
@@ -32,6 +33,7 @@
   Socket = function (socket) {
     Socket.super_.call(this);
 
+    this.join('all');
     this.socket = socket;
     this.namespaces = {};
     this.callbacks = new Callbacks();
@@ -49,6 +51,20 @@
 
   inherits(Socket, EventEmitter);
   Socket.prototype._emit = EventEmitter.prototype.emit;
+
+
+  /*
+   * (Static) All
+   */
+
+  Socket.all = Room.get('all');
+
+
+  /*
+   * (Static) In
+   */
+
+  Socket.in = Room.prototype.in;
 
 
   /*
@@ -210,29 +226,26 @@
 
 
   /*
-   * Broadcast
-   *
-   * - event (string)
-   * - args... (mixed)
-   */
-
-  Socket.prototype.broadcast = function (event) {
-    var args;
-
-    args = Array.prototype.slice(arguments);
-    args.unshift(this);
-    Socket.sockets.broadcast.apply(Socket.sockets, args);
-  };
-
-
-  /*
-   * Broadcast.to
+   * Join
    *
    * - room (string)
    */
 
-  Socket.prototype.broadcast.to = function (room) {
-    return Room.get(room);
+  Socket.prototype.join = function (room) {
+    room = Room.get(room);
+    room.join(this);
+  };
+
+
+  /*
+   * Leave
+   *
+   * - room (string)
+   */
+
+  Socket.prototype.leave = function (room) {
+    room = Room.get(room);
+    room.leave(this);
   };
 
 

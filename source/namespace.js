@@ -2,7 +2,7 @@
 
   'use strict';
 
-  var Namespace, EventEmitter, inherits, Socket;
+  var Namespace, EventEmitter, inherits; 
 
 
   /*
@@ -38,14 +38,6 @@
 
 
   /*
-   * Resolve circular dependency with Socket
-   */
-
-  module.exports = Namespace;
-  Socket = require('./socket');
-
-
-  /*
    * Emit
    *
    * - event (string)
@@ -61,32 +53,6 @@
     this.item.emit.apply(this.item, args);
   };
 
-
-  /*
-   * Broadcast
-   *
-   * - event (string)
-   * - args... (mixed)
-   */
-
-  Namespace.prototype.broadcast = function (event) {
-    var args;
-
-    args = Array.prototype.slice(arguments);
-    args.unshift(item);
-    Socket.sockets.broadcast.apply(Socket.sockets, args);
-  };
-
-
-  /*
-   * Broadcast.to
-   *
-   * - room (string)
-   */
-
-  Namespace.prototype.broadcast.to = function () {
-    throw new Error('this has not been written yet');
-  };
-
+  module.exports = Namespace;
 
 }());
