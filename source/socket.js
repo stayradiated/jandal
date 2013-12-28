@@ -36,11 +36,15 @@
     this.join('all');
     this.socket = socket;
     this.namespaces = {};
+    this.rooms = [];
     this.callbacks = new Callbacks();
 
     var self = this;
     Socket._handle.read(this.socket, function (message) {
       self._process(message);
+    });
+    Socket._handle.close(this.socket, function () {
+      self.release();
     });
   };
 
@@ -232,8 +236,12 @@
    */
 
   Socket.prototype.join = function (room) {
-    room = Room.get(room);
-    room.join(this);
+    var index = this.rooms.indexOf(room);
+    if (index < 0) {
+      this.rooms.push(room);
+      room = Room.get(room);
+      room.join(this);
+    }
   };
 
 
@@ -244,8 +252,25 @@
    */
 
   Socket.prototype.leave = function (room) {
-    room = Room.get(room);
-    room.leave(this);
+    var index = this.rooms.indexOf(room);
+    if (index > -1) {
+      this.rooms.splice(index, 1);
+      room = Room.get(room);
+      room.leave(this);
+    }
+  };
+
+
+  /*
+   * Release
+   */
+
+  Socket.prototype.release = function () {
+    var i, len;
+    len = this.rooms.length;
+    for (i = len - 1; i >= 0; i--) {
+      this.leave(this.rooms[i]);
+    }
   };
 
 

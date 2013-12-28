@@ -16,6 +16,9 @@
       },
       read: function (socket, fn) {
         socket.on('data', fn);
+      },
+      close: function (socket, fn) {
+        socket.on('close', fn);
       }
     },
 
@@ -27,6 +30,9 @@
         socket.onmessage = function (e) {
           fn(e.data);
         };
+      },
+      close: function (socket, fn) {
+        socket.onclose = fn;
       }
     }
 
