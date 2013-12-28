@@ -1,17 +1,25 @@
-var should, Room, emit, newSocket, socketId;
+var should, Room, Namespace, broadcastFrom, emit, newSocket, socketId;
 
 should = require('should');
 Room = require('../source/room');
+Namespace = require('../source/namespace');
+broadcastFrom = require('../source/broadcast');
 
 socketId = -1;
 
 newSocket = function () {
-  return {
+  var socket = {
     id: ++socketId,
     emit: function () {
       emit.apply(this, arguments);
+    },
+    namespace: function (name) {
+      return new Namespace(name, this);
     }
   };
+  Room.get('all').join(socket);
+  // broadcastFrom(socket);
+  return socket;
 };
 
 describe('Room', function () {
@@ -20,6 +28,9 @@ describe('Room', function () {
 
     // Destroy all rooms
     Room.flush();
+
+    // Setup broadcast
+    broadcastFrom.init(Room);
 
     // Override this to handle emitting
     emit = function () {
@@ -48,13 +59,13 @@ describe('Room', function () {
     var room;
 
     room = Room.get('thing');
-    Room.rooms.should.have.keys('thing');
+    Room.rooms.should.have.keys('all', 'thing');
 
     Room.remove('thing');
     Room.rooms.should.not.have.keys('thing');
 
     room = Room.get('odd');
-    Room.rooms.should.have.keys('odd');
+    Room.rooms.should.have.keys('all', 'odd');
 
     room.destroy();
     Room.rooms.should.not.have.keys('odd');
@@ -168,6 +179,31 @@ describe('Room', function () {
 
     namespace.emit('event');
     callCount.should.equal(2);
+  });
+
+  it('broadcast to a room from a namespace', function () {
+    var room, socket1, socket2, namespace, callCount;
+
+    room = Room.get('room');
+    socket1 = newSocket();
+    socket2 = newSocket();
+    socket3 = newSocket();
+    room.join(socket1);
+    room.join(socket2);
+    room.join(socket3);
+    callCount = 0;
+
+    emit = function (event) {
+      this.should.not.equal(socket1);
+      event.should.equal('namespace.event');
+      callCount++;
+    };
+
+    namespace = socket1.namespace('namespace');
+
+    namespace.broadcast('event');
+    callCount.should.equal(2);
+
   });
 
 });

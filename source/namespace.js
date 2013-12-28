@@ -2,13 +2,14 @@
 
   'use strict';
 
-  var Namespace, EventEmitter, inherits; 
+  var Namespace, broadcastFrom, EventEmitter, inherits; 
 
 
   /*
    * Dependencies
    */
 
+  broadcastFrom = require('./broadcast');
   EventEmitter = require('events').EventEmitter;
   inherits = require('./util').inherits;
 
@@ -26,6 +27,9 @@
 
     this.name = name;
     this.item = item;
+
+    broadcastFrom(this.item, this, '_broadcast');
+    delete this.broadcast.to;
   };
 
 
@@ -45,12 +49,14 @@
    */
 
   Namespace.prototype.emit = function (event) {
-    var args;
+    arguments[0] = this.name + '.' + event;
+    this.item.emit.apply(this.item, arguments);
+  };
 
-    args = Array.prototype.slice.call(arguments);
-    args[0] = this.name + '.' + event;
 
-    this.item.emit.apply(this.item, args);
+  Namespace.prototype.broadcast = function (event) {
+    arguments[0] = this.name + '.' + event;
+    this._broadcast.apply(this, arguments);
   };
 
   module.exports = Namespace;

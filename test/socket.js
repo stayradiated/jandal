@@ -31,9 +31,9 @@ describe('Socket', function () {
   };
 
   beforeEach(function () {
+    Room.flush();
     conn = createSocket();
     socket = new Socket(conn);
-    Room.flush();
   });
 
 // ----------------------------------------------------------------------------
@@ -264,12 +264,14 @@ describe('Socket', function () {
   it('should join a room', function () {
     socket.join('my_room');
     Socket.in('my_room').length().should.equal(1);
+    socket.rooms.should.eql(['all', 'my_room']);
   });
 
   it('should leave a room', function () {
     socket.join('my_room');
     socket.leave('my_room');
     Socket.in('my_room').length().should.equal(0);
+    socket.rooms.should.eql(['all']);
   });
 
 });

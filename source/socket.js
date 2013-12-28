@@ -2,7 +2,7 @@
 
   'use strict';
 
-  var Socket, Namespace, Callbacks, Room,
+  var Socket, Namespace, Callbacks, Room, broadcastFrom,
       EventEmitter, inherits,
       EVENT_ARGS, NS_EVENT, CALLBACK;
 
@@ -15,6 +15,9 @@
   Callbacks = require('./callbacks');
   Room = require('./room');
   inherits = require('./util').inherits;
+
+  broadcastFrom = require('./broadcast');
+  broadcastFrom.init(Room);
 
 
   /*
@@ -33,11 +36,13 @@
   Socket = function (socket) {
     Socket.super_.call(this);
 
-    this.join('all');
     this.socket = socket;
     this.namespaces = {};
     this.rooms = [];
     this.callbacks = new Callbacks();
+    this.join('all');
+
+    broadcastFrom(this);
 
     var self = this;
     Socket._handle.read(this.socket, function (message) {
@@ -227,6 +232,8 @@
       args: Array.prototype.slice.call(arguments, 1)
     }));
   };
+
+  
 
 
   /*
