@@ -4,7 +4,7 @@
   "description": "Manage events, callbacks and rooms over a socket connection",
   "main": "source/jandal.js",
   "scripts": {
-    "build": "browserify source/jandal.js | uglifyjs -cmo build/client.js",
+    "build": "browserify source/jandal.js -s Jandal | uglifyjs -cmo build/client.js",
     "test": "mocha test"
   },
   "repository": {
