@@ -2,6 +2,7 @@ var Jandal, Socket, createSocket, should;
 
 Jandal = require('../source/jandal');
 Socket = require('../source/socket');
+Room = require('../source/room');
 should = require('should');
 
 // Use node bindings
@@ -32,6 +33,7 @@ describe('Socket', function () {
   beforeEach(function () {
     conn = createSocket();
     socket = new Socket(conn);
+    Room.flush();
   });
 
 // ----------------------------------------------------------------------------
@@ -262,6 +264,12 @@ describe('Socket', function () {
   it('should join a room', function () {
     socket.join('my_room');
     Socket.in('my_room').length().should.equal(1);
+  });
+
+  it('should leave a room', function () {
+    socket.join('my_room');
+    socket.leave('my_room');
+    Socket.in('my_room').length().should.equal(0);
   });
 
 });
