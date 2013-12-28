@@ -1,7 +1,7 @@
 {
   "name": "jandal",
-  "version": "0.0.3",
-  "description": "Manage events and callbacks over a socket connection",
+  "version": "0.0.4",
+  "description": "Manage events, callbacks and rooms over a socket connection",
   "main": "jandal.js",
   "scripts": {
     "test": "mocha test"
