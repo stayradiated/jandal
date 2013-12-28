@@ -4,6 +4,7 @@
   "description": "Manage events, callbacks and rooms over a socket connection",
   "main": "source/jandal.js",
   "scripts": {
+    "build": "browserify source/jandal.js -o build/client.js",
     "test": "mocha test"
   },
   "repository": {
@@ -11,7 +12,13 @@
     "url": "https://github.com/stayradiated/jandal.git"
   },
   "keywords": [
-    "websocket", "sockjs", "event", "socket", "message", "emit", "listen"
+    "websocket",
+    "sockjs",
+    "event",
+    "socket",
+    "message",
+    "emit",
+    "listen"
   ],
   "author": "George Czabania",
   "license": "BSD-2-Clause",
@@ -19,11 +26,9 @@
     "url": "https://github.com/stayradiated/jandal/issues"
   },
   "homepage": "https://github.com/stayradiated/jandal",
-  "dependencies": {
-    "events": "~1.0.0"
-  },
   "devDependencies": {
     "should": "~2.1.1",
-    "mocha": "~1.16.1"
+    "mocha": "~1.16.1",
+    "browserify": "~3.16.0"
   }
 }
