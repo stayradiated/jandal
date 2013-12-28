@@ -15,7 +15,6 @@
   Callbacks = require('./callbacks');
   Room = require('./room');
   inherits = require('./util').inherits;
-
   broadcastFrom = require('./broadcast');
   broadcastFrom.init(Room);
 
@@ -36,18 +35,20 @@
   Socket = function (socket) {
     Socket.super_.call(this);
 
+    var self = this;
+
     this.socket = socket;
     this.namespaces = {};
     this.rooms = [];
     this.callbacks = new Callbacks();
-    this.join('all');
 
+    this.join('all');
     broadcastFrom(this);
 
-    var self = this;
     Socket._handle.read(this.socket, function (message) {
       self._process(message);
     });
+
     Socket._handle.close(this.socket, function () {
       self.release();
     });
@@ -87,7 +88,6 @@
     var message, namespace, callback;
 
     message = this.parse(data);
-
     callback = message.event.match(CALLBACK);
     if (callback) {
       return this.callbacks.exec(callback[1], message.args);
@@ -95,7 +95,6 @@
 
     message.args.unshift(message.event);
     namespace = this.namespaces[message.namespace];
-
     if (message.namespace && namespace) {
       namespace._emit.apply(namespace, message.args);
     } else {
@@ -130,8 +129,7 @@
    */
 
   Socket.prototype.namespace = function (name) {
-    var namespace;
-    namespace = this.namespaces[name];
+    var namespace = this.namespaces[name];
     if (! namespace) {
       namespace = this.namespaces[name] = new Namespace(name, this);
     }
@@ -162,7 +160,6 @@
     string = message.event + '(';
     args = JSON.stringify(args);
     string += args.slice(1, -1) + ')';
-
     return string;
   };
 
@@ -189,7 +186,6 @@
 
     namespace = match[1];
     namespace = namespace ? namespace.slice(0, -1) : false;
-
     args = JSON.parse('[' + args + ']');
     len = args.length;
 
@@ -209,7 +205,6 @@
       event: event,
       args: args
     };
-
   };
 
 
@@ -221,8 +216,6 @@
    */
 
   Socket.prototype.emit = function (event) {
-
-    // EventEmitter events are proxied
     if (event === 'newListener' || event === 'removeListener') {
       return this._emit.apply(this, arguments);
     }

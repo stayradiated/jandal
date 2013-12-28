@@ -40,8 +40,7 @@
    */
 
   Room.get = function (id) {
-    var room;
-    room = Room.rooms[id];
+    var room = Room.rooms[id];
     if (! room) {
       room = Room.rooms[id] = new Room(id);
     }
@@ -67,8 +66,7 @@
    */
 
   Room.flush = function () {
-    var id;
-    for (id in Room.rooms) {
+    for (var id in Room.rooms) {
       Room.remove(id);
     }
   };
@@ -96,8 +94,7 @@
    */
 
   Room.prototype.leave = function (socket) {
-    var index;
-    index = this.sockets.indexOf(socket);
+    var index = this.sockets.indexOf(socket);
     if (index > -1) {
       this.sockets.splice(index, 1);
     }
@@ -165,8 +162,7 @@
    */
 
   Room.prototype.namespace = function (name) {
-    var namespace;
-    namespace = this.namespaces[name];
+    var namespace = this.namespaces[name];
     if (! namespace) {
       namespace = this.namespaces[name] = new Namespace(name, this);
     }

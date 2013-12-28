@@ -54,10 +54,18 @@
   };
 
 
+  /*
+   * Broadcast
+   *
+   * - event (string)
+   * - args... (mixed)
+   */
+
   Namespace.prototype.broadcast = function (event) {
     arguments[0] = this.name + '.' + event;
     this._broadcast.apply(this, arguments);
   };
+
 
   module.exports = Namespace;
 
