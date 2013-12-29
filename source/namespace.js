@@ -48,9 +48,9 @@
    * - args... (mixed) : any other data you want to send
    */
 
-  Namespace.prototype.emit = function (event) {
-    arguments[0] = this.name + '.' + event;
-    this.item.emit.apply(this.item, arguments);
+  Namespace.prototype.emit = function (event, arg1, arg2, arg3) {
+    event = this.name + '.' + event;
+    this.item.emit(event, arg1, arg2, arg3);
   };
 
 
@@ -61,9 +61,9 @@
    * - args... (mixed)
    */
 
-  Namespace.prototype.broadcast = function (event) {
-    arguments[0] = this.name + '.' + event;
-    this._broadcast.apply(this, arguments);
+  Namespace.prototype.broadcast = function (event, arg1, arg2, arg3) {
+    event = this.name + '.' + event;
+    this._broadcast(event, arg1, arg2, arg3);
   };
 
 

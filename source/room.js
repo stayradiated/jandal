@@ -121,12 +121,11 @@
    * - args... (mixed)
    */
 
-  Room.prototype.emit = function () {
-    var i, len, socket;
+  Room.prototype.emit = function (event, arg1, arg2, arg3) {
+    var i, len;
     len = this.sockets.length;
     for (i = 0; i < len; i++) {
-      socket = this.sockets[i];
-      socket.emit.apply(socket, arguments);
+      this.sockets[i].emit(event, arg1, arg2, arg3);
     }
   };
 
@@ -140,14 +139,13 @@
    * - args... (mixed)
    */
 
-  Room.prototype.broadcast = function (sender) {
-    var i, len, socket, args;
+  Room.prototype.broadcast = function (sender, event, arg1, arg2, arg3) {
+    var i, len, socket;
     len = this.sockets.length;
-    args = Array.prototype.slice.call(arguments, 1);
     for (i = 0; i < len; i++) {
       socket = this.sockets[i];
       if (socket !== sender) {
-        socket.emit.apply(socket, args);
+        socket.emit(event, arg1, arg2, arg3);
       }
     }
   };

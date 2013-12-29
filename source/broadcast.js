@@ -24,10 +24,8 @@
    */
 
   broadcast = function (self) {
-    return function (event) {
-      var args = Array.prototype.slice.call(arguments);
-      args.unshift(self);
-      allSockets.broadcast.apply(allSockets, args);
+    return function (event, arg1, arg2, arg3) {
+      allSockets.broadcast(self, event, arg1, arg2, arg3);
     };
   };
 
@@ -42,10 +40,8 @@
     return function (room) {
       room = Room.get(room);
       return {
-        emit: function (event) {
-          var args = Array.prototype.slice.call(arguments);
-          args.unshift(self);
-          room.broadcast.apply(room, args);
+        emit: function (event, arg1, arg2, arg3) {
+          room.broadcast(self, event, arg1, arg2, arg3);
         }
       };
     };

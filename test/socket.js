@@ -45,7 +45,9 @@ describe('Socket', function () {
 
     string = socket.serialize({
       event: 'test',
-      args: ['one', 'two', 'three']
+      arg1: 'one',
+      arg2: 'two',
+      arg3: 'three'
     });
     string.should.equal('test("one","two","three")');
   });
@@ -56,14 +58,18 @@ describe('Socket', function () {
     object = {
       namespace: 'socket',
       event: 'test',
-      args: ['one', 'two', 'three']
+      arg1: 'one',
+      arg2: 'two',
+      arg3: 'three'
     };
     socket.parse('socket.test("one","two","three")').should.eql(object);
 
     object = {
       namespace: false,
       event: 'test',
-      args: ['one', 'two', 'three']
+      arg1: 'one',
+      arg2: 'two',
+      arg3: 'three'
     };
     socket.parse('test("one","two","three")').should.eql(object);
   });
@@ -93,20 +99,14 @@ describe('Socket', function () {
   });
 
   it('should proxy native EventEmitter events', function () {
-    var total;
 
-    socket.on('newListener', function () {
-      total = arguments.length;
+    socket.on('newListener', function (event, fn) {
+      event.should.have.type('string');
+      fn.should.have.type('function');
     });
 
-    total = 0;
     socket.on('should trigger newListener', function () {});
-    total.should.equal(2);
-
-    total = 0;
     socket.emit('newListener', 'randomEvent', function () {});
-    total.should.equal(2);
-
     should.strictEqual(conn.last, null);
   });
 
@@ -116,7 +116,6 @@ describe('Socket', function () {
 // ----------------------------------------------------------------------------
 
   it('should create namespaces', function () {
-
     var shoe;
 
     shoe = socket.namespace('shoe');
@@ -126,7 +125,6 @@ describe('Socket', function () {
   });
 
   it('should prefix namespaced events', function () {
-
     var shoe;
 
     shoe = socket.namespace('shoe');
@@ -139,62 +137,47 @@ describe('Socket', function () {
   });
 
   it('should respond to namespaced events', function () {
-
     var shoe, total;
 
     shoe = socket.namespace('shoe');
 
-    shoe.on('event', function () {
-      total = arguments.length;
+    shoe.on('event', function (a, b) {
+      a.should.have.type('string');
+      b.should.have.type('string');
     });
 
-    total = -1;
-    conn.reply('shoe.event({"pretty":"neat"})');
-    total.should.equal(1);
-
-    total = -1;
+    conn.reply('shoe.event("thats","odd")');
     conn.reply('shoe.event("hello","world")');
-    total.should.equal(2);
   });
 
   it('should not mix events between namespaces', function () {
-
-    var shoe, sandal, total, type;
+    var shoe, sandal, type;
 
     shoe = socket.namespace('shoe');
     sandal = socket.namespace('sandal');
 
     socket.on('event', function () {
-      total = arguments.length;
       type = 'socket';
     });
 
     shoe.on('event', function () {
-      total = arguments.length;
       type = 'shoe';
     });
 
     sandal.on('event', function () {
-      total = arguments.length;
       type = 'sandal';
     });
 
-    total = -1;
     type = '';
     conn.reply('event("test")');
-    total.should.equal(1);
     type.should.equal('socket');
 
-    total = -1;
     type = '';
     conn.reply('shoe.event("test", "thing")');
-    total.should.equal(2);
     type.should.equal('shoe');
 
-    total = -1;
     type = '';
     conn.reply('sandal.event(["test", "thing"],"hello")');
-    total.should.equal(2);
     type.should.equal('sandal');
   });
 

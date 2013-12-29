@@ -85,20 +85,24 @@
    */
 
   Socket.prototype._process = function (data) {
-    var message, namespace, callback;
+    var message, namespace, callback, event, arg1, arg2, arg3;
 
     message = this.parse(data);
-    callback = message.event.match(CALLBACK);
+    event = message.event;
+    arg1 = message.arg1;
+    arg2 = message.arg2;
+    arg3 = message.arg3;
+
+    callback = event.match(CALLBACK);
     if (callback) {
-      return this.callbacks.exec(callback[1], message.args);
+      return this.callbacks.exec(callback[1], arg1, arg2, arg3);
     }
 
-    message.args.unshift(message.event);
     namespace = this.namespaces[message.namespace];
     if (message.namespace && namespace) {
-      namespace._emit.apply(namespace, message.args);
+      namespace._emit(event, arg1, arg2, arg3);
     } else {
-      this._emit.apply(this, message.args);
+      this._emit(event, arg1, arg2, arg3);
     }
   };
 
@@ -112,10 +116,8 @@
 
   Socket.prototype._callback = function (id) {
     var self = this;
-    return function () {
-      var args = Array.prototype.slice.call(arguments);
-      args.unshift('__fn__' + id);
-      self.emit.apply(self, args);
+    return function (arg1, arg2, arg3) {
+      self.emit('__fn__' + id, arg1, arg2, arg3);
     };
   };
 
@@ -145,20 +147,35 @@
    */
 
   Socket.prototype.serialize = function (message) {
-    var string, args, len, i, arg;
+    var string, args, i, arg, arg1, arg2, arg3;
 
-    args = message.args;
-    len = args.length;
-
-    for (i = 0; i < len; i++) {
-      arg = args[i];
+    for (i = 0; i < 3; i++) {
+      arg = message['arg' + i];
       if (typeof arg === 'function') {
-        args[i] = '__fn__' + this.callbacks.register(arg);
+        message['arg' + i] = '__fn__' + this.callbacks.register(arg);
       }
     }
 
-    string = message.event + '(';
+    arg1 = message.arg1;
+    arg2 = message.arg2;
+    arg3 = message.arg3;
+
+    if (arg1 === undefined && arg2 === undefined && arg3 === undefined) {
+      args = [];
+    }
+    else if (arg2 === undefined && arg3 === undefined) {
+      args = [arg1];
+    }
+    else if (arg3 === undefined) {
+      args = [arg1, arg2];
+    }
+    else {
+      args = [arg1, arg2, arg3];
+    }
+
     args = JSON.stringify(args);
+
+    string = message.event + '(';
     string += args.slice(1, -1) + ')';
     return string;
   };
@@ -203,7 +220,9 @@
     return {
       namespace: namespace,
       event: event,
-      args: args
+      arg1: args[0],
+      arg2: args[1],
+      arg3: args[2]
     };
   };
 
@@ -215,14 +234,16 @@
    * - args... (mixed) : any data you want to send
    */
 
-  Socket.prototype.emit = function (event) {
+  Socket.prototype.emit = function (event, arg1, arg2, arg3) {
     if (event === 'newListener' || event === 'removeListener') {
-      return this._emit.apply(this, arguments);
+      return this._emit(event, arg1, arg2, arg3);
     }
 
     Socket._handle.write(this.socket, this.serialize({
       event: event,
-      args: Array.prototype.slice.call(arguments, 1)
+      arg1: arg1,
+      arg2: arg2,
+      arg3: arg3
     }));
   };
 

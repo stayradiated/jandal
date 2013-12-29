@@ -35,8 +35,8 @@
    * - args (array) : arguments
    */
 
-  Callbacks.prototype.exec = function (id, args) {
-    this.collection[id].apply(this, args);
+  Callbacks.prototype.exec = function (id, arg1, arg2, arg3) {
+    this.collection[id](arg1, arg2, arg3);
     delete this.collection[id];
   };
 
