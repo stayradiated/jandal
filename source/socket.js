@@ -283,6 +283,15 @@
 
 
   /*
+   * Room
+   *
+   * - name (string)
+   */
+
+  Socket.prototype.room = Room.prototype.in;
+
+
+  /*
    * Release
    */
 
