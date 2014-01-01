@@ -74,6 +74,14 @@ describe('Socket', function () {
     socket.parse('test("one","two","three")').should.eql(object);
   });
 
+  it('should not break if messages cannot be parsed', function () {
+    socket.parse('socket.test(one,two,three)').should.equal(false);
+    socket.parse('some nonsense').should.equal(false);
+    socket.parse('not.a.message(")').should.equal(false);
+    socket.parse('what_could ({happen:20})').should.equal(false);
+    socket.parse('.()').should.equal(false);
+  });
+
 // ----------------------------------------------------------------------------
 // EVENTS
 // ----------------------------------------------------------------------------

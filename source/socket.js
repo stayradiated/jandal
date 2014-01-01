@@ -24,7 +24,7 @@
    */
 
   EVENT_ARGS = /^([^\(]+)\((.*)\)$/;
-  NS_EVENT = /^([\w-]+\.)?([^\(]+)$/;
+  NS_EVENT = /^([\w-]+\.)?([^\.\(]+)$/;
   CALLBACK = /__fn__(\d+)/;
 
 
@@ -194,16 +194,26 @@
     match = message.match(EVENT_ARGS);
 
     if (! match) {
-      throw new Error('Could not parse', message);
+      return false;
     }
 
     args  = match[2];
     match = match[1].match(NS_EVENT);
-    event = match[2];
 
+    if (! match) {
+      return false;
+    }
+
+    event = match[2];
     namespace = match[1];
     namespace = namespace ? namespace.slice(0, -1) : false;
-    args = JSON.parse('[' + args + ']');
+
+    try {
+      args = JSON.parse('[' + args + ']');
+    } catch (e) {
+      return false;
+    }
+
     len = args.length;
 
     // Replace callback ids with functions
@@ -247,7 +257,7 @@
     }));
   };
 
-  
+
 
 
   /*
