@@ -191,6 +191,10 @@
   Socket.prototype.parse = function (message) {
     var namespace, event, args, len, i, arg, match;
 
+    if (typeof message !== 'string') {
+      return false;
+    }
+
     match = message.match(EVENT_ARGS);
 
     if (! match) {

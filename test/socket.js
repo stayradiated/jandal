@@ -80,6 +80,7 @@ describe('Socket', function () {
     socket.parse('not.a.message(")').should.equal(false);
     socket.parse('what_could ({happen:20})').should.equal(false);
     socket.parse('.()').should.equal(false);
+    socket.parse(undefined).should.equal(false);
   });
 
 // ----------------------------------------------------------------------------
