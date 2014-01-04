@@ -4,7 +4,7 @@
 
   var Socket, Namespace, Callbacks, Room, broadcastFrom,
       EventEmitter, inherits,
-      EVENT_ARGS, NS_EVENT, CALLBACK;
+      EVENT_ARGS, FN, NS_EVENT, CALLBACK;
 
   /*
    * Dependencies
@@ -23,10 +23,9 @@
    * Constants
    */
 
-  EVENT_ARGS = /^([^\(]+)\((.*)\)$/;
+  FN = /\.fn\((\d+)\)$/;
+  EVENT_ARGS = /^([^\(]+)\((.*)\)/;
   NS_EVENT = /^([\w-]+\.)?([^\.\(]+)$/;
-  CALLBACK = /__fn__(\d+)/;
-
 
   /*
    * Socket Constructor
@@ -40,7 +39,7 @@
     this.socket = socket;
     this.namespaces = {};
     this.rooms = [];
-    this.callbacks = new Callbacks();
+    this.callbacks = new Callbacks(this.namespace('Jandal'));
 
     this.join('all');
     broadcastFrom(this);
@@ -93,11 +92,6 @@
     arg2 = message.arg2;
     arg3 = message.arg3;
 
-    callback = event.match(CALLBACK);
-    if (callback) {
-      return this.callbacks.exec(callback[1], arg1, arg2, arg3);
-    }
-
     namespace = this.namespaces[message.namespace];
     if (message.namespace && namespace) {
       namespace._emit(event, arg1, arg2, arg3);
@@ -117,7 +111,7 @@
   Socket.prototype._callback = function (id) {
     var self = this;
     return function (arg1, arg2, arg3) {
-      self.emit('__fn__' + id, arg1, arg2, arg3);
+      self.emit('Jandal.fn_' + id, arg1, arg2, arg3);
     };
   };
 
@@ -147,12 +141,16 @@
    */
 
   Socket.prototype.serialize = function (message) {
-    var string, args, i, arg, arg1, arg2, arg3;
+    var string, args, i, arg, arg1, arg2, arg3, cb;
 
     for (i = 0; i < 3; i++) {
       arg = message['arg' + i];
       if (typeof arg === 'function') {
-        message['arg' + i] = '__fn__' + this.callbacks.register(arg);
+        if (cb !== undefined) {
+          throw new Error('Limit of one callback per message!');
+        }
+        message['arg' + i] = undefined;
+        cb = this.callbacks.register(arg);
       }
     }
 
@@ -177,6 +175,11 @@
 
     string = message.event + '(';
     string += args.slice(1, -1) + ')';
+
+    if (cb !== undefined) {
+      string += '.fn(' + cb + ')';
+    }
+
     return string;
   };
 
@@ -189,24 +192,22 @@
    */
 
   Socket.prototype.parse = function (message) {
-    var namespace, event, args, len, i, arg, match;
+    var namespace, event, args, match, fn;
+    if (typeof message !== 'string') return false;
 
-    if (typeof message !== 'string') {
-      return false;
+    match = message.match(FN);
+    if (match) {
+      fn = match[1];
+      message = message.slice(0, match.index);
     }
 
     match = message.match(EVENT_ARGS);
+    if (! match) return false;
 
-    if (! match) {
-      return false;
-    }
+    args = match[2];
 
-    args  = match[2];
     match = match[1].match(NS_EVENT);
-
-    if (! match) {
-      return false;
-    }
+    if (! match) return false;
 
     event = match[2];
     namespace = match[1];
@@ -218,17 +219,8 @@
       return false;
     }
 
-    len = args.length;
-
-    // Replace callback ids with functions
-    for (i = 0; i < len; i++) {
-      arg = args[i];
-      if (typeof arg === 'string') {
-        match = arg.match(CALLBACK);
-        if (match) {
-          args[i] = this._callback(match[1]);
-        }
-      }
+    if (fn !== undefined) {
+      args.push(this._callback(fn));
     }
 
     return {

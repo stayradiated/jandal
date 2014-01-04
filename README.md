@@ -87,14 +87,11 @@ This works by giving each callback an id, and sending that in it's place.
 
     // sending a function to the server
 
-    getPrice('apples', '__fn__20')
+    getPrice('apples').fn(20)
 
     // running the callback with arguments
 
-    __fn__20(2.5)
-
-The default template for callbacks is `__fn__<id>`. This will be able to be
-changed if it clashes with your event names or arguments.
+    Jandal.fn_20(2.5)
 
 ## Rooms
 

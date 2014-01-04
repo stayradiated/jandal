@@ -49,7 +49,17 @@ describe('Socket', function () {
       arg2: 'two',
       arg3: 'three'
     });
+
     string.should.equal('test("one","two","three")');
+
+    string = socket.serialize({
+      event: 'test',
+      arg1: 'one',
+      arg2: function () {}
+    });
+
+    string.should.equal('test("one").fn(0)');
+
   });
 
   it('should parse messages', function () {
@@ -72,6 +82,9 @@ describe('Socket', function () {
       arg3: 'three'
     };
     socket.parse('test("one","two","three")').should.eql(object);
+
+    socket.parse('test().fn(0)').arg1.should.have.type('function');
+    socket.parse('test("arg1").fn(0)').arg2.should.have.type('function');
   });
 
   it('should not break if messages cannot be parsed', function () {
@@ -202,10 +215,10 @@ describe('Socket', function () {
     fn = function () { };
 
     socket.emit('event', fn);
-    expect('event("__fn__0")');
+    expect('event().fn(0)');
 
     socket.emit('event', fn);
-    expect('event("__fn__1")');
+    expect('event().fn(1)');
 
   });
 
@@ -216,8 +229,8 @@ describe('Socket', function () {
       callback();
     });
 
-    conn.reply('event("__fn__20")');
-    expect('__fn__20()');
+    conn.reply('event().fn(20)');
+    expect('Jandal.fn_20()');
 
   });
 
@@ -227,13 +240,12 @@ describe('Socket', function () {
       callback('hello', 'world');
     });
 
-    conn.reply('event("__fn__101")');
-    expect('__fn__101("hello","world")');
+    conn.reply('event().fn(10)');
+    expect('Jandal.fn_10("hello","world")');
 
   });
 
   it('should run callbacks', function (done) {
-
     var fn;
 
     fn = function (a, b) {
@@ -243,8 +255,7 @@ describe('Socket', function () {
     };
 
     socket.emit('event', fn);
-
-    conn.reply('__fn__0("some","arguments")');
+    conn.reply('Jandal.fn_0("some","arguments")');
 
   });
 
@@ -267,3 +278,4 @@ describe('Socket', function () {
   });
 
 });
+

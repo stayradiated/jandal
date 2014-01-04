@@ -8,9 +8,10 @@
    * Callbacks Constructor
    */
 
-  Callbacks = function () {
+  Callbacks = function (namespace) {
     this.collection = {};
     this.index = 0;
+    this.namespace = namespace;
   };
 
 
@@ -22,8 +23,17 @@
    */
 
   Callbacks.prototype.register = function (fn) {
-    this.collection[this.index] = fn;
-    return this.index++;
+    var self, id;
+
+    self = this;
+    id = this.index++;
+    this.collection[id] = fn;
+
+    this.namespace.on('fn_' + id, function(arg1, arg2, arg3) {
+      self.exec(id, arg1, arg2, arg3);
+    });
+
+    return id;
   };
 
 
