@@ -60,6 +60,15 @@ describe('Socket', function () {
 
     string.should.equal('test("one").fn(0)');
 
+    string = socket.serialize({
+      event: 'something.amazing',
+      arg1: ['woo loo'],
+      arg2: {oh: 'yeah'},
+      arg3: function () {}
+    });
+
+    string.should.equal('something.amazing(["woo loo"],{"oh":"yeah"}).fn(1)');
+
   });
 
   it('should parse messages', function () {

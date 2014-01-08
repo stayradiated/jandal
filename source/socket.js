@@ -144,13 +144,13 @@
     var string, args, i, arg, arg1, arg2, arg3, cb;
 
     for (i = 1; i < 4; i++) {
-      arg = message['arg' + i];
-      if (typeof arg === 'function') {
+      arg = 'arg' + i;
+      if (typeof message[arg] === 'function') {
         if (cb !== undefined) {
           throw new Error('Limit of one callback per message!');
         }
-        message['arg' + i] = undefined;
-        cb = this.callbacks.register(arg);
+        cb = this.callbacks.register(message[arg]);
+        message[arg] = undefined;
       }
     }
 
