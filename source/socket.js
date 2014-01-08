@@ -143,7 +143,7 @@
   Socket.prototype.serialize = function (message) {
     var string, args, i, arg, arg1, arg2, arg3, cb;
 
-    for (i = 0; i < 3; i++) {
+    for (i = 1; i < 4; i++) {
       arg = message['arg' + i];
       if (typeof arg === 'function') {
         if (cb !== undefined) {
