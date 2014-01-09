@@ -29,14 +29,13 @@
 
   /*
    * Socket Constructor
+   *
+   * - [socket] (Object) : socket to send and receive messages over
    */
 
   Socket = function (socket) {
     Socket.super_.call(this);
 
-    var self = this;
-
-    this.socket = socket;
     this.namespaces = {};
     this.rooms = [];
     this.callbacks = new Callbacks(this.namespace('Jandal'));
@@ -44,13 +43,9 @@
     this.join('all');
     broadcastFrom(this);
 
-    Socket._handle.read(this.socket, function (message) {
-      self._process(message);
-    });
-
-    Socket._handle.close(this.socket, function () {
-      self.release();
-    });
+    if (socket) {
+      this.connect(socket);
+    }
   };
 
 
@@ -113,6 +108,27 @@
     return function (arg1, arg2, arg3) {
       self.emit('Jandal.fn_' + id, arg1, arg2, arg3);
     };
+  };
+
+
+  /*
+   * Connect
+   * Connect to a socket
+   *
+   * - socket (Object)
+   */
+
+  Socket.prototype.connect = function (socket) {
+    var self = this;
+    this.socket = socket;
+
+    Socket._handle.read(this.socket, function (message) {
+      self._process(message);
+    });
+
+    Socket._handle.close(this.socket, function () {
+      self.release();
+    });
   };
 
 
