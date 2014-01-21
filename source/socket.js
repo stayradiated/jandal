@@ -122,12 +122,21 @@
     var self = this;
     this.socket = socket;
 
+    Socket._handle.open(this.socket, function (event) {
+      self._emit('socket.open', event);
+    });
+
     Socket._handle.read(this.socket, function (message) {
       self._process(message);
     });
 
-    Socket._handle.close(this.socket, function () {
+    Socket._handle.error(this.socket, function (event) {
+      self._emit('socket.error', event);
+    });
+
+    Socket._handle.close(this.socket, function (event) {
       self.release();
+      self._emit('socket.close', event)
     });
   };
 

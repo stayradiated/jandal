@@ -19,10 +19,16 @@
       },
       close: function (socket, fn) {
         socket.on('close', fn);
+      },
+      error: function(socket, fn) {
+        socket.on('error', fn);
+      },
+      open: function(socket, fn) {
+        fn();
       }
     },
 
-    sockjs: {
+    websockets: {
       write: function (socket, message) {
         socket.send(message);
       },
@@ -33,6 +39,12 @@
       },
       close: function (socket, fn) {
         socket.onclose = fn;
+      },
+      error: function(socket, fn) {
+        socket.onerror = fn;
+      },
+      open: function(socket, fn) {
+        socket.onopen = fn;
       }
     }
 
