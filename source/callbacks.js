@@ -23,14 +23,16 @@
    */
 
   Callbacks.prototype.register = function (fn) {
-    var self, id;
+    var self, id, args;
 
     self = this;
     id = this.index++;
     this.collection[id] = fn;
 
-    this.namespace.on('fn_' + id, function(arg1, arg2, arg3) {
-      self.exec(id, arg1, arg2, arg3);
+    this.namespace.on('fn_' + id, function() {
+      args = Array.prototype.slice.call(arguments);
+      args.unshift(id);
+      self.exec.apply(self, args);
     });
 
     return id;
@@ -45,8 +47,10 @@
    * - args (array) : arguments
    */
 
-  Callbacks.prototype.exec = function (id, arg1, arg2, arg3) {
-    this.collection[id](arg1, arg2, arg3);
+  Callbacks.prototype.exec = function (id) {
+    var args;
+    args = Array.prototype.slice.call(arguments, 1);
+    this.collection[id].apply(this, args);
     delete this.collection[id];
   };
 

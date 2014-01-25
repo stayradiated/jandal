@@ -2,7 +2,7 @@
 
   'use strict';
 
-  var Namespace, broadcastFrom, EventEmitter, inherits; 
+  var Namespace, broadcastFrom, EventEmitter, inherits;
 
 
   /*
@@ -48,9 +48,11 @@
    * - args... (mixed) : any other data you want to send
    */
 
-  Namespace.prototype.emit = function (event, arg1, arg2, arg3) {
-    event = this.name + '.' + event;
-    this.item.emit(event, arg1, arg2, arg3);
+  Namespace.prototype.emit = function (event) {
+    var args;
+    args = Array.prototype.slice.call(arguments);
+    args[0] = this.name + '.' + event;
+    this.item.emit.apply(this.item, args);
   };
 
 
@@ -61,9 +63,11 @@
    * - args... (mixed)
    */
 
-  Namespace.prototype.broadcast = function (event, arg1, arg2, arg3) {
-    event = this.name + '.' + event;
-    this._broadcast(event, arg1, arg2, arg3);
+  Namespace.prototype.broadcast = function (event) {
+    var args;
+    args = Array.prototype.slice.call(arguments);
+    args[0] = this.name + '.' + event;
+    this._broadcast.apply(this, args);
   };
 
 

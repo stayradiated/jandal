@@ -45,26 +45,21 @@ describe('Socket', function () {
 
     string = socket.serialize({
       event: 'test',
-      arg1: 'one',
-      arg2: 'two',
-      arg3: 'three'
+      args: ['one', 'two', 'three']
     });
 
     string.should.equal('test("one","two","three")');
 
     string = socket.serialize({
       event: 'test',
-      arg1: 'one',
-      arg2: function () {}
+      args: ['one', function () {}]
     });
 
     string.should.equal('test("one").fn(0)');
 
     string = socket.serialize({
       event: 'something.amazing',
-      arg1: ['woo loo'],
-      arg2: {oh: 'yeah'},
-      arg3: function () {}
+      args: [['woo loo'], { oh: 'yeah'}, function () {}]
     });
 
     string.should.equal('something.amazing(["woo loo"],{"oh":"yeah"}).fn(1)');
@@ -77,23 +72,19 @@ describe('Socket', function () {
     object = {
       namespace: 'socket',
       event: 'test',
-      arg1: 'one',
-      arg2: 'two',
-      arg3: 'three'
+      args: ['one', 'two', 'three']
     };
     socket.parse('socket.test("one","two","three")').should.eql(object);
 
     object = {
       namespace: false,
       event: 'test',
-      arg1: 'one',
-      arg2: 'two',
-      arg3: 'three'
+      args: ['one', 'two', 'three']
     };
     socket.parse('test("one","two","three")').should.eql(object);
 
-    socket.parse('test().fn(0)').arg1.should.have.type('function');
-    socket.parse('test("arg1").fn(0)').arg2.should.have.type('function');
+    socket.parse('test().fn(0)').args[0].should.have.type('function');
+    socket.parse('test("arg1").fn(0)').args[1].should.have.type('function');
   });
 
   it('should not break if messages cannot be parsed', function () {
