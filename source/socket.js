@@ -168,7 +168,8 @@
   Socket.prototype.serialize = function (message) {
     var string, args, i, arg, arg1, arg2, arg3, cb;
 
-    for (i = 1; i < 4; i++) {
+    // Check for function callbacks
+    for (i = 1; i < 4; i++) { // 1, 2, 3
       arg = 'arg' + i;
       if (typeof message[arg] === 'function') {
         if (cb !== undefined) {

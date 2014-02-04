@@ -3,6 +3,12 @@ Jandal
 
 Event handler for [SockJS](https://github.com/sockjs/sockjs-node).
 
+## Important
+
+Jandal will allow you to emit a maximum of three arguments. This is purely to improve performance in most browsers and in nodejs.
+
+If you need more than three arguments, you can use the [multi-args branch](https://github.com/stayradiated/jandal/multi-args).
+
 ## How it works
 
 The idea is that we have a standard [EventEmitter](http://nodejs.org/api/events.html#events_class_events_eventemitter) handling the events, and that we serialize the information as text in the following way:
