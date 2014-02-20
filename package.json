@@ -1,6 +1,6 @@
 {
   "name": "jandal",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "Manage events, callbacks and rooms over a socket connection",
   "main": "source/jandal.js",
   "scripts": {

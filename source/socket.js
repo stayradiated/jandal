@@ -134,9 +134,9 @@
       self._emit('socket.error', event);
     });
 
-    Socket._handle.close(this.socket, function (event) {
+    Socket._handle.close(this.socket, function (status, message) {
       self.release();
-      self._emit('socket.close', event)
+      self._emit('socket.close', status, message);
     });
   };
 
