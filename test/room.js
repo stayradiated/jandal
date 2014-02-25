@@ -1,42 +1,19 @@
-var should, Room, Namespace, broadcastFrom, emit, newSocket, socketId;
+var should, Room, Namespace, broadcastFrom, newSocket;
 
 should = require('should');
 Room = require('../source/room');
 Namespace = require('../source/namespace');
 broadcastFrom = require('../source/broadcast');
-
-socketId = -1;
-
-newSocket = function () {
-  var socket = {
-    id: ++socketId,
-    emit: function () {
-      emit.apply(this, arguments);
-    },
-    namespace: function (name) {
-      return new Namespace(name, this);
-    }
-  };
-  Room.get('all').join(socket);
-  // broadcastFrom(socket);
-  return socket;
-};
+newSocket = require('./fake');
 
 describe('Room', function () {
 
   beforeEach(function () {
-
-    // Destroy all rooms
-    Room.flush();
-
-    // Setup broadcast
     broadcastFrom.init(Room);
+  });
 
-    // Override this to handle emitting
-    emit = function () {
-      console.log(arguments);
-    };
-
+  afterEach(function () {
+    Room.flush();
   });
 
   it('can create rooms', function () {
@@ -125,10 +102,10 @@ describe('Room', function () {
     socket2 = newSocket();
     callCount = 0;
 
-    emit = function (event) {
+    newSocket.listen(function (event) {
       callCount++;
       event.should.equal('hello');
-    };
+    });
 
     room.join(socket1);
     room.join(socket2);
@@ -151,11 +128,11 @@ describe('Room', function () {
     room.join(socket2);
     room.join(sender);
 
-    emit = function (event) {
+    newSocket.listen(function (event) {
       event.should.equal('the_broadcast');
       this.should.not.equal(sender);
       callCount++;
-    };
+    });
 
     room.broadcast(sender.id, 'the_broadcast');
     callCount.should.equal(2);
@@ -172,10 +149,10 @@ describe('Room', function () {
     namespace = room.namespace('namespace');
     callCount = 0;
 
-    emit = function (event) {
+    newSocket.listen(function (event) {
       event.should.equal('namespace.event');
       callCount++;
-    };
+    });
 
     namespace.emit('event');
     callCount.should.equal(2);
@@ -193,11 +170,11 @@ describe('Room', function () {
     room.join(socket3);
     callCount = 0;
 
-    emit = function (event) {
+    newSocket.listen(function (event) {
       this.should.not.equal(socket1);
       event.should.equal('namespace.event');
       callCount++;
-    };
+    });
 
     namespace = socket1.namespace('namespace');
 

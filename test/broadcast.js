@@ -1,35 +1,20 @@
-var broadcast, Room, should, emit, socketId, newSocket;
+'use strict';
 
-broadcastFrom = require('../source/broadcast');
-Room = require('../source/room');
-should = require('should');
+var should, Room, Broadcast, newSocket;
 
-socketId = -1;
-newSocket = function () {
-  var socket = {
-    id: ++socketId,
-    emit: function () {
-      emit.apply(this, arguments);
-    }
-  };
-  broadcastFrom(socket);
-  Room.get('all').join(socket);
-  return socket;
-};
+should        = require('should');
+Room          = require('../source/room');
+Broadcast     = require('../source/broadcast');
+newSocket     = require('./fake');
 
 describe('Broadcast', function () {
 
   beforeEach(function () {
-    // Flush rooms
+    Broadcast.init(Room);
+  });
+
+  afterEach(function () {
     Room.flush();
-
-    // Setup broadcast
-    broadcastFrom.init(Room);
-
-    // Override this function
-    emit = function () {
-      console.log(arguments);
-    };
   });
 
   it('should put sockets in the all room', function () {
@@ -49,11 +34,11 @@ describe('Broadcast', function () {
     sock_2 = newSocket();
     sock_3 = newSocket();
 
-    emit = function (event) {
+    newSocket.listen(function (event) {
       event.should.equal('hello');
-      this.should.not.equal(sock_1);
+      this.should.not.equal(sock_1.socket);
       callCount++;
-    };
+    });
 
     callCount = 0;
     sock_1.broadcast('hello');
@@ -75,11 +60,11 @@ describe('Broadcast', function () {
 
     room.length().should.equal(3);
 
-    emit = function (event) {
+    newSocket.listen(function (event) {
       event.should.equal('hello');
       this.should.not.equal(sock_1);
       callCount++;
-    };
+    });
 
     callCount = 0;
     sock_1.broadcast.to('random').emit('hello');

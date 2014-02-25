@@ -2,14 +2,14 @@
 
   'use strict';
 
-  var Namespace, broadcastFrom, EventEmitter, inherits; 
+  var Namespace, Broadcast, EventEmitter, inherits; 
 
 
   /*
    * Dependencies
    */
 
-  broadcastFrom = require('./broadcast');
+  Broadcast = require('./broadcast');
   EventEmitter = require('events').EventEmitter;
   inherits = require('./util').inherits;
 
@@ -28,7 +28,7 @@
     this.name = name;
     this.item = item;
 
-    broadcastFrom(this.item, this, '_broadcast');
+    Broadcast.attach(this.item, this, '_broadcast');
     delete this.broadcast.to;
   };
 

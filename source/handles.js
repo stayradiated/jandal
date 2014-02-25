@@ -2,7 +2,8 @@
 
   'use strict';
 
-  var jandalHandles;
+  var jandalHandles, websocketsId;
+  websocketsId = 0;
 
   /*
    * Can you handle the jandal?
@@ -11,39 +12,43 @@
   jandalHandles = {
 
     node: {
+      identify: function (socket) {
+        return socket.id;
+      },
       write: function (socket, message) {
         socket.write(message);
       },
-      read: function (socket, fn) {
+      onread: function (socket, fn) {
         socket.on('data', fn);
       },
-      close: function (socket, fn) {
+      onclose: function (socket, fn) {
         socket.on('close', fn);
       },
-      error: function(socket, fn) {
+      onerror: function(socket, fn) {
         socket.on('error', fn);
       },
-      open: function(socket, fn) {
-        fn();
+      onopen: function(socket, fn) {
+        setTimeout(fn, 0);
       }
     },
 
     websockets: {
+      identify: function (socket) {
+        return socket.id || socket.id = ++websocketsId;
+      },
       write: function (socket, message) {
         socket.send(message);
       },
-      read: function (socket, fn) {
-        socket.onmessage = function (e) {
-          fn(e.data);
-        };
+      onread: function (socket, fn) {
+        socket.onmessage = function (e) { fn(e.data); };
       },
-      close: function (socket, fn) {
+      onclose: function (socket, fn) {
         socket.onclose = fn;
       },
-      error: function(socket, fn) {
+      onerror: function(socket, fn) {
         socket.onerror = fn;
       },
-      open: function(socket, fn) {
+      onopen: function(socket, fn) {
         socket.onopen = fn;
       }
     }
