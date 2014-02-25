@@ -25,7 +25,7 @@
 
   broadcast = function (self) {
     return function (event, arg1, arg2, arg3) {
-      allSockets.broadcast(self, event, arg1, arg2, arg3);
+      allSockets.broadcast(self.id, event, arg1, arg2, arg3);
     };
   };
 
@@ -41,7 +41,7 @@
       room = Room.get(room);
       return {
         emit: function (event, arg1, arg2, arg3) {
-          room.broadcast(self, event, arg1, arg2, arg3);
+          room.broadcast(self.id, event, arg1, arg2, arg3);
         }
       };
     };

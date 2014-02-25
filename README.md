@@ -149,3 +149,10 @@ To compile for the browser:
 
 And then either copy/paste the `build/client.js` file into your project, or
 include it via `require('jandal/build/client');`.
+
+## Changelog
+
+### 0.0.15
+
+- When broadcasting from a socket, check `socket.id !== sender` instead of
+  `socket !== sender`. This requires all sockets to have an 'id' attribute.

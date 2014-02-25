@@ -1,11 +1,11 @@
 {
   "name": "jandal",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "description": "Manage events, callbacks and rooms over a socket connection",
   "main": "source/jandal.js",
   "scripts": {
     "build": "browserify source/jandal.js -s Jandal | uglifyjs -cmo client.js",
-    "test": "mocha test"
+    "test": "mocha -R spec --bail test"
   },
   "repository": {
     "type": "git",

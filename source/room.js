@@ -144,7 +144,7 @@
     len = this.sockets.length;
     for (i = 0; i < len; i++) {
       socket = this.sockets[i];
-      if (socket !== sender) {
+      if (socket.id !== sender) {
         socket.emit(event, arg1, arg2, arg3);
       }
     }

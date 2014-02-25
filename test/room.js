@@ -157,7 +157,7 @@ describe('Room', function () {
       callCount++;
     };
 
-    room.broadcast(sender, 'the_broadcast');
+    room.broadcast(sender.id, 'the_broadcast');
     callCount.should.equal(2);
   });
 
