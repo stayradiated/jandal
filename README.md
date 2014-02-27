@@ -1,21 +1,27 @@
-Jandal
-======
+# Jandal
 
-Event handler for [SockJS](https://github.com/sockjs/sockjs-node).
+An event handler for socket interfaces. It was built for use with
+[SockJS](https://github.com/sockjs/sockjs-node), but can be used with any
+socket interface, such as node streams.
+
+It has a similar feature set to [Socket.io](http://socket.io), including rooms
+and broadcasting.
 
 ## Important
 
-Jandal will allow you to emit a maximum of three arguments. This is purely to
-improve performance in most browsers and in nodejs.
+Jandal has a maximum of three arguments per event. This restriction vastly
+improves performance in most browsers and in nodejs.
 
-There is the
+This may sound harsh, but you probably don't need to use more than three args
+anyway. You can always store extra args in an array or object.
+
+There is also the deprecated
 [multi-args branch](https://github.com/stayradiated/jandal/multi-args)
-branch - but it is not kept up to date. If you need to use more than three
-args, open an issue and we can sort something out.
+- but it is not kept up to date.
 
-## Usage
+# Example Usage
 
-### Server
+## Server
 
 ```javascript
 var http, Jandal, sockjs, server, conn;
@@ -28,22 +34,32 @@ sockjs = require('sockjs');
 server = http.createServer();
 conn = sockjs.createServer();
 conn.installHandlers(server, { prefix: '/socket' });
+server.listen(8080);
 
-// Handle new connections
+// Listen for new connections
 conn.on('connection', function (socket) {
+    var jandal;
 
-    // wrap a socket in a jandal
+    // wrap the socket in a Jandal
     jandal = new Jandal(socket, 'stream');
 
-    // bind jandal events
-    jandal.on('echo', function (text, fn) {
-        fn('server: ' + text);
+    // listening for the 'log' event
+    jandal.on('log', function (text) {
+        console.log('log: ' + text);
+    });
+
+    // listening for an event with a callback
+    jandal.on('echo', function (text, callback) {
+        callback(text);
+    });
+
+    // send an event to the client
+    jandal.emit('weclome', {
+        id: socket.id,
+        time: Date.now()
     });
 
 });
-
-// Start server
-server.listen(8080);
 ```
 
 ## Client
@@ -62,17 +78,47 @@ socket = new Jandal(conn, 'websocket');
 // Wait for socket to connect
 socket.on('socket.open', function () {
 
+    // listen for events
+    socket.on('welcome', function (info) {
+        console.log(info);
+    });
+
+    // send a message to the server
+    socket.emit('log', 'the time is' + Date.now());
+
     // Send a message to the server with a callback
     socket.emit('echo', 'hello', function (reply) {
-        console.log(reply); //=> "server: hello"
+        assert(reply === 'hello');
     });
 
 });
 ```
 
-# Documentation
+## Rooms
 
-## Jandal: Class
+```javascript
+
+conn.on('connection', function (socket) {
+    var jandal;
+
+    // wrap the socket
+    jandal = new Jandal(socket, 'stream');
+
+    // add it to a room
+    jandal.join('my_room');
+
+    // emit to all other sockets in a room
+    jandal.broadcast.to('my_room').emit('a new socket has joined', jandal.id);
+
+    // remove it from a room
+    jandal.leave('my_room');
+
+});
+```
+
+# Jandal Class
+
+## Static Properties
 
 The `Jandal` class has a couple of static properties useful for managing
 connected sockets.
@@ -106,17 +152,17 @@ Easily access any sockets in any room. See the `Room` docs for more info.
 Jandal.in('my-room').emit('hello');
 ```
 
-## Jandal: Instance
+## Instance Properties
 
 Every Jandal instance extends the NodeJS EventEmitter so you can also use
 methods like: `once`, `removeAllListeners` and `setMaxListeners`. See the
 [EventEmitter docs](http://nodejs.org/api/events.html) for more information.
 
-### jandal.rooms
+### rooms
 
 An array that holds all the rooms the socket is currently joined to.
 
-### jandal.connect(socket, handle)
+### connect(socket, handle)
 
 **Parameters:**
 
@@ -157,7 +203,7 @@ jandal.connect(socket, handle);
 ```
 
 
-### jandal.emit(event, arg1, arg2, arg3)
+### emit(event, arg1, arg2, arg3)
 
 This is very similar to the NodeJS EventEmitter, but you are limited to three
 arguments.
@@ -196,7 +242,7 @@ jandal.emit('my-callback', 'some data', function (response) {
 ```
 
 
-### jandal.on(event, listener)
+### on(event, listener)
 
 Works very similar to the EventEmitter.
 
@@ -222,7 +268,7 @@ jandal.on('task.create', listener);
 jandal.namespace('task').on('create', listener);
 ```
 
-### jandal.namespace(name)
+### namespace(name)
 
 Return a new Namespace instance. If the namespace already exists, it will
 use that instead of creating a new one. See the `Namespace` docs for more info.
@@ -248,7 +294,7 @@ ns.on('goodbye', function () {
 });
 ```
 
-### jandal.join(room)
+### join(room)
 
 Put the socket in a room.
 
@@ -262,7 +308,7 @@ Put the socket in a room.
 jandal.join('my-room');
 ```
 
-### jandal.leave(room)
+### leave(room)
 
 Remove the socket from a room.
 
@@ -276,7 +322,7 @@ Remove the socket from a room.
 jandal.leave('my-room');
 ```
 
-### jandal.room(room)
+### room(room)
 
 Returns a room. Same as `Jandal.in`.
 
@@ -297,7 +343,7 @@ var room = jandal.room('my-room');
 room.emit('hello');
 ```
 
-### jandal.release()
+### release()
 
 Remove the socket from all the rooms it is currently in.
 
@@ -307,7 +353,137 @@ Remove the socket from all the rooms it is currently in.
 jandal.release();
 ```
 
-## Protocol
+# Room
+
+## Instance Methods
+
+Rooms are just a collection of sockets. You can add or remove sockets from
+them, and emit events to all sockets in that room, or broadcast events from a
+socket to all other sockets.
+
+Every socket is added to the 'all' room, which can be acessed through
+`Jandal.all`.
+
+### length()
+
+Returns the number of connected sockets in a room.
+
+**Example:**
+
+```javascript
+Jandal.in('my-room').length();
+```
+
+### join(jandal)
+
+Add a jandal to a room.
+
+**Parameters:**
+
+- jandal (Jandal) : an instance of a Jandal
+
+**Example:**
+
+```javascript
+jandal = new Jandal();
+Jandal.in('my-room').join(jandal);
+```
+
+### leave(jandal)
+
+Remove a jandal from a room.
+
+**Parameters:**
+
+- jandal (Jandal) : an instance of a Jandal
+
+**Example:**
+
+```javascript
+jandal = new Jandal();
+Jandal.in('my-room').leave(jandal);
+```
+
+### contains(jandal)
+
+Check if a socket is in a room. Returns `true` or `false`.
+
+**Parameters**
+
+- jandal (Jandal) : an instance of a Jandal
+
+**Example:**
+
+```javascript
+var a, b;
+
+a = new Jandal();
+a.join('my-room');
+
+b = new Jandal();
+
+Jandal.in('my-room').contains(a); // true
+Jandal.in('my-room').contains(b); // false
+```
+
+### emit(event, arg1, arg2, arg3)
+
+Exactly the same as `jandal.emit` but will be sent to all connected sockets.
+
+**Parameters:**
+
+- event (string) : name of the event
+- arg1 (dynamic)
+- arg2 (dynamic)
+- arg3 (dynamic)
+
+**Example:**
+
+```javascript
+Jandal.in('my-room').emit('hello', 1, 2, 3);
+```
+
+### broadcast(sender, event, arg1, arg2, arg3)
+
+Just like emit, but will not send to the 'sender' socket.
+
+**Parameters:**
+
+- sender (dynamic)
+- event (string)
+- arg1 (dynamic)
+- arg2 (dynamic)
+- arg3 (dynamic)
+
+**Example:**
+
+```javascript
+Jandal.in('my-room').broadcast('some-id', 'bye', 1, 2, 3);
+```
+
+### namespace(name)
+
+Get a namespace for a room.
+
+**Parameters:**
+
+- name (string) : the name of the namespace
+
+**Example:**
+
+```javascript
+Jandal.in('my-room').namespace('tasks').emit('create', 'something');
+```
+
+### destroy()
+
+Destroy all sockets in a room
+
+```javascript
+Jandal.in('my-room').destroy()
+```
+
+# Protocol
 
 Jandal uses a simple protocol for encoding messages. It's based on the
 javascript syntax for objects and functions. Arguments are encoded using
@@ -360,166 +536,7 @@ socket.fn_23({login: success})
 socket.fn_24({login: fail}).fn(25)
 ```
 
-
-## Room: Instance
-
-Rooms are just a collection of sockets. You can add or remove sockets from
-them, and emit events to all sockets in that room, or broadcast events from a
-socket to all other sockets.
-
-Every socket is added to the 'all' room, which can be acessed through
-`Jandal.all`.
-
-### room.length()
-
-Returns the number of connected sockets in a room.
-
-**Example:**
-
-```javascript
-Jandal.in('my-room').length();
-```
-
-### room.join(jandal)
-
-Add a jandal to a room.
-
-**Parameters:**
-
-- jandal (Jandal) : an instance of a Jandal
-
-**Example:**
-
-```javascript
-jandal = new Jandal();
-Jandal.in('my-room').join(jandal);
-```
-
-### room.leave(jandal)
-
-Remove a jandal from a room.
-
-**Parameters:**
-
-- jandal (Jandal) : an instance of a Jandal
-
-**Example:**
-
-```javascript
-jandal = new Jandal();
-Jandal.in('my-room').leave(jandal);
-```
-
-### room.contains(jandal)
-
-Check if a socket is in a room. Returns `true` or `false`.
-
-**Parameters**
-
-- jandal (Jandal) : an instance of a Jandal
-
-**Example:**
-
-```javascript
-var a, b;
-
-a = new Jandal();
-a.join('my-room');
-
-b = new Jandal();
-
-Jandal.in('my-room').contains(a); // true
-Jandal.in('my-room').contains(b); // false
-```
-
-### room.emit(event, arg1, arg2, arg3)
-
-Exactly the same as `jandal.emit` but will be sent to all connected sockets.
-
-**Parameters:**
-
-- event (string) : name of the event
-- arg1 (dynamic)
-- arg2 (dynamic)
-- arg3 (dynamic)
-
-**Example:**
-
-```javascript
-Jandal.in('my-room').emit('hello', 1, 2, 3);
-```
-
-### room.broadcast(sender, event, arg1, arg2, arg3)
-
-Just like emit, but will not send to the 'sender' socket.
-
-**Parameters:**
-
-- sender (dynamic)
-- event (string)
-- arg1 (dynamic)
-- arg2 (dynamic)
-- arg3 (dynamic)
-
-**Example:**
-
-```javascript
-Jandal.in('my-room').broadcast('some-id', 'bye', 1, 2, 3);
-```
-
-### room.namespace(name)
-
-Get a namespace for a room.
-
-**Parameters:**
-
-- name (string) : the name of the namespace
-
-**Example:**
-
-```javascript
-Jandal.in('my-room').namespace('tasks').emit('create', 'something');
-```
-
-### room.destroy()
-
-Destroy all sockets in a room
-
-```javascript
-Jandal.in('my-room').destroy()
-```
-
-# Using Rooms
-
-Adding a socket to a room.
-
-    sock = new Jandal(socket);
-    sock.join('my_room');
-
-Removing a socket from a room
-
-    sock.leave('my_room');
-
-Emitting to all sockets
-
-    Jandal.all.emit('message');
-
-Emitting to all sockets in a room
-
-    Jandal.all.in('my_room').emit('message');
-
-    // Alternative
-    sock.in('my_room').emit('message');
-
-Broadcasting to all the other sockets
-
-    sock.broadcast('hi everyone');
-
-Broadcasting to other sockets in a room
-
-    sock.broadcast.to('my_room').emit('a new socket has joined');
-
-## Browsers
+# Browsers
 
 The same code can be run in the browser by using Browserify.
 
@@ -533,13 +550,12 @@ To compile for the browser:
 And then either copy/paste the `client.js` file into your project, or
 include it via `require('jandal/client');`.
 
-## Changelog
+# Changelog
 
-### 0.0.15
+## 0.0.15
 
 - When broadcasting from a socket, check `socket.id !== sender` instead of
   `socket !== sender`. This requires all sockets to have an 'id' attribute.
 - Use the `socket` namespace instead of `Jandal` for handling callbacks.
 - Make `serialize` and `parse` private methods of a Jandal instance.
 - Make `namespaces` and `callbacks` private properties of a Jandal instance.
-- Remove `Room.prototype.in`
