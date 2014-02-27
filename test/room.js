@@ -91,7 +91,7 @@ describe('Room', function () {
     room1 = Room.get('room1');
     room2 = Room.get('room2');
 
-    room1.in('room2').should.equal(room2);
+    Room.get('room2').should.equal(room2);
   });
 
   it('emit to all sockets in a room', function () {

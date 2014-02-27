@@ -19,7 +19,7 @@
   Room = function (id) {
     this.id = id;
     this.sockets = [];
-    this.namespaces = {};
+    this._namespaces = {};
   };
 
 
@@ -83,6 +83,7 @@
     if (! (socket in this.sockets)) {
       this.sockets.push(socket);
     }
+    return this;
   };
 
 
@@ -98,6 +99,7 @@
     if (index > -1) {
       this.sockets.splice(index, 1);
     }
+    return this;
   };
 
 
@@ -127,6 +129,7 @@
     for (i = 0; i < len; i++) {
       this.sockets[i].emit(event, arg1, arg2, arg3);
     }
+    return this;
   };
 
 
@@ -148,6 +151,7 @@
         socket.emit(event, arg1, arg2, arg3);
       }
     }
+    return this;
   };
 
 
@@ -160,25 +164,11 @@
    */
 
   Room.prototype.namespace = function (name) {
-    var namespace = this.namespaces[name];
+    var namespace = this._namespaces[name];
     if (! namespace) {
-      namespace = this.namespaces[name] = new Namespace(name, this);
+      namespace = this._namespaces[name] = new Namespace(name, this);
     }
     return namespace;
-  };
-
-
-  /*
-   * In
-   * Get another room of sockets
-   * So you can do `Jandal.sockets.in('room').emit('hi');`
-   *
-   * - id (int) : id of the room
-   * > room
-   */
-
-  Room.prototype.in = function (id) {
-    return Room.get(id);
   };
 
 
@@ -204,10 +194,14 @@
 
   /*
    * Destroy
-   * Remove the room
+   * Remove all sockets from a room
    */
 
   Room.prototype.destroy = function () {
+    var i;
+    for (i = this.sockets.length - 1; i >= 0; i--) {
+      this.remove(this.sockets[i]);
+    }
     Room.remove(this.id);
   };
 

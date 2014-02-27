@@ -239,7 +239,7 @@ describe('Socket', function () {
     });
 
     conn.reply('event().fn(20)');
-    expect('Jandal.fn_20()');
+    expect('socket.fn_20()');
 
   });
 
@@ -250,7 +250,7 @@ describe('Socket', function () {
     });
 
     conn.reply('event().fn(10)');
-    expect('Jandal.fn_10("hello","world")');
+    expect('socket.fn_10("hello","world")');
 
   });
 
@@ -264,7 +264,7 @@ describe('Socket', function () {
     };
 
     socket.emit('event', fn);
-    conn.reply('Jandal.fn_0("some","arguments")');
+    conn.reply('socket.fn_0("some","arguments")');
 
   });
 

@@ -68,7 +68,7 @@ Socket.all = Room.get('all');
  * (Static) In
  */
 
-Socket.in = Room.prototype.in;
+Socket.in = Room.get;
 
 
 /*
@@ -107,7 +107,7 @@ Socket.prototype._process = function (data) {
 Socket.prototype._callback = function (id) {
   var self = this;
   return function (arg1, arg2, arg3) {
-    self.emit('Jandal.fn_' + id, arg1, arg2, arg3);
+    self.emit('socket.fn_' + id, arg1, arg2, arg3);
   };
 };
 
@@ -322,7 +322,7 @@ Socket.prototype.leave = function (room) {
  * - name (string)
  */
 
-Socket.prototype.room = Room.prototype.in;
+Socket.prototype.room = Room.get;
 
 
 /*

@@ -72,40 +72,6 @@ socket.on('socket.open', function () {
 
 # Documentation
 
-## Protocol
-
-Jandal uses a simple protocol for encoding messages. It's based on the
-javascript syntax for objects and functions. Arguments are encoded using
-JSON.stringify.
-
-There are four parts to a message:
-
-- namespace
-- event
-- args
-- callback
-
-The namespace and callback are both optional.
-
-**Example messages:**
-
-```javascript
-// event + single arg
-fetch("info")
-
-// event + multiple args
-fetch("info",{"count":40})
-
-// event + arg + callback
-fetch("info").fn(10)
-
-// namespace + event + arg
-user.load("numbers",[10,20,30])
-
-// namespace + event + arg + callback
-task.create({"name":"this is a new task"}).fn(1)
-```
-
 ## Jandal: Class
 
 The `Jandal` class has a couple of static properties useful for managing
@@ -341,43 +307,61 @@ Remove the socket from all the rooms it is currently in.
 jandal.release();
 ```
 
+## Protocol
 
-### Callbacks
+Jandal uses a simple protocol for encoding messages. It's based on the
+javascript syntax for objects and functions. Arguments are encoded using
+JSON.stringify.
 
-This allows you to send a function across the websocket, and have the other
-side execute it when they want to.
+There are four parts to a message:
 
-    /* CLIENT */
+- namespace
+- event
+- args
+- callback
 
-    jandal.emit('getPrice', 'apples', function (price) {
-        console.log('apples cost', price);
-    });
+The namespace and callback are both optional.
 
-    /* SERVER */
+**Example messages:**
 
-    var products = {
-        apples: 2.50
-    };
+```javascript
+// event + single arg
+fetch("info")
 
-    jandal.on('getPrice', function (product, callback) {
-        var price = prices[product];
-        callback(price);
-    });
+// event + multiple args
+fetch("info",{"count":40})
 
-Note: You can also send functions from the server and have the client execute
-them.
+// event + arg + callback
+fetch("info").fn(10)
 
-This works by giving each callback an id, and sending that in it's place.
+// namespace + event + arg
+user.load("numbers",[10,20,30])
 
-    // sending a function to the server
+// namespace + event + arg + callback
+task.create({"name":"this is a new task"}).fn(1)
+```
 
-    getPrice('apples').fn(20)
+**Callbacks:**
 
-    // running the callback with arguments
+Each message can have a single callback. The callback must be the last
+arguments, and can only be called once.
 
-    Jandal.fn_20(2.5)
+Callbacks are just like regular events, so you can also have a callback
+on a callback.
 
-### Rooms
+```javascript
+// send a message with a callback
+app.login('username', 'password').fn(32)
+
+// response running the callback with args
+socket.fn_23({login: success})
+
+// callback with a callback
+socket.fn_24({login: fail}).fn(25)
+```
+
+
+## Room: Instance
 
 Rooms are just a collection of sockets. You can add or remove sockets from
 them, and emit events to all sockets in that room, or broadcast events from a
@@ -385,6 +369,127 @@ socket to all other sockets.
 
 Every socket is added to the 'all' room, which can be acessed through
 `Jandal.all`.
+
+### room.length()
+
+Returns the number of connected sockets in a room.
+
+**Example:**
+
+```javascript
+Jandal.in('my-room').length();
+```
+
+### room.join(jandal)
+
+Add a jandal to a room.
+
+**Parameters:**
+
+- jandal (Jandal) : an instance of a Jandal
+
+**Example:**
+
+```javascript
+jandal = new Jandal();
+Jandal.in('my-room').join(jandal);
+```
+
+### room.leave(jandal)
+
+Remove a jandal from a room.
+
+**Parameters:**
+
+- jandal (Jandal) : an instance of a Jandal
+
+**Example:**
+
+```javascript
+jandal = new Jandal();
+Jandal.in('my-room').leave(jandal);
+```
+
+### room.contains(jandal)
+
+Check if a socket is in a room. Returns `true` or `false`.
+
+**Parameters**
+
+- jandal (Jandal) : an instance of a Jandal
+
+**Example:**
+
+```javascript
+var a, b;
+
+a = new Jandal();
+a.join('my-room');
+
+b = new Jandal();
+
+Jandal.in('my-room').contains(a); // true
+Jandal.in('my-room').contains(b); // false
+```
+
+### room.emit(event, arg1, arg2, arg3)
+
+Exactly the same as `jandal.emit` but will be sent to all connected sockets.
+
+**Parameters:**
+
+- event (string) : name of the event
+- arg1 (dynamic)
+- arg2 (dynamic)
+- arg3 (dynamic)
+
+**Example:**
+
+```javascript
+Jandal.in('my-room').emit('hello', 1, 2, 3);
+```
+
+### room.broadcast(sender, event, arg1, arg2, arg3)
+
+Just like emit, but will not send to the 'sender' socket.
+
+**Parameters:**
+
+- sender (dynamic)
+- event (string)
+- arg1 (dynamic)
+- arg2 (dynamic)
+- arg3 (dynamic)
+
+**Example:**
+
+```javascript
+Jandal.in('my-room').broadcast('some-id', 'bye', 1, 2, 3);
+```
+
+### room.namespace(name)
+
+Get a namespace for a room.
+
+**Parameters:**
+
+- name (string) : the name of the namespace
+
+**Example:**
+
+```javascript
+Jandal.in('my-room').namespace('tasks').emit('create', 'something');
+```
+
+### room.destroy()
+
+Destroy all sockets in a room
+
+```javascript
+Jandal.in('my-room').destroy()
+```
+
+# Using Rooms
 
 Adding a socket to a room.
 
@@ -437,3 +542,4 @@ include it via `require('jandal/client');`.
 - Use the `socket` namespace instead of `Jandal` for handling callbacks.
 - Make `serialize` and `parse` private methods of a Jandal instance.
 - Make `namespaces` and `callbacks` private properties of a Jandal instance.
+- Remove `Room.prototype.in`
