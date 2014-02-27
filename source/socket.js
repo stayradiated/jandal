@@ -33,9 +33,11 @@ NS_EVENT = /^([\w-]+\.)?([^\.\(]+)$/;
 Socket = function (socket) {
   Socket.super_.call(this);
 
-  this.namespaces = {};
   this.rooms = [];
-  this.callbacks = new Callbacks(this.namespace('Jandal'));
+
+  // private vars
+  this._namespaces = {};
+  this._callbacks = new Callbacks(this.namespace('socket'));
 
   this.join('all');
   Broadcast.attach(this);
@@ -85,9 +87,10 @@ Socket.prototype._process = function (data) {
   arg2 = message.arg2;
   arg3 = message.arg3;
 
-  namespace = this.namespaces[message.namespace];
+  namespace = this._namespaces[message.namespace];
   if (message.namespace && namespace) {
     namespace._emit(event, arg1, arg2, arg3);
+    this._emit(message.namespace + '.' + event, arg1, arg2, arg3);
   } else {
     this._emit(event, arg1, arg2, arg3);
   }
@@ -149,9 +152,9 @@ Socket.prototype.connect = function (socket) {
  */
 
 Socket.prototype.namespace = function (name) {
-  var namespace = this.namespaces[name];
+  var namespace = this._namespaces[name];
   if (! namespace) {
-    namespace = this.namespaces[name] = new Namespace(name, this);
+    namespace = this._namespaces[name] = new Namespace(name, this);
   }
   return namespace;
 };
@@ -174,7 +177,7 @@ Socket.prototype._serialize = function (message) {
       if (cb !== undefined) {
         throw new Error('Limit of one callback per message!');
       }
-      cb = this.callbacks.register(message[arg]);
+      cb = this._callbacks.register(message[arg]);
       message[arg] = undefined;
     }
   }
