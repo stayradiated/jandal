@@ -73,6 +73,20 @@
 
 
   /*
+   * In
+   * Get another room of sockets
+   * So you can do `Jandal.sockets.in('room').emit('hi');`
+   *
+   * - id (int) : id of the room
+   * > room
+   */
+
+  Room.prototype.in = function (id) {
+    return Room.get(id);
+  };
+
+
+  /*
    * Join
    * Add a socket to the room
    *
