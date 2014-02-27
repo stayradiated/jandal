@@ -1,0 +1,602 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Jandal by stayradiated</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1 class="header">Jandal</h1>
+        <p class="header">Manage sockets using events, callbacks and rooms</p>
+
+        <ul>
+          <li class="download"><a class="buttons" href="https://github.com/stayradiated/jandal/zipball/master">Download ZIP</a></li>
+          <li class="download"><a class="buttons" href="https://github.com/stayradiated/jandal/tarball/master">Download TAR</a></li>
+          <li><a class="buttons github" href="https://github.com/stayradiated/jandal">View On GitHub</a></li>
+        </ul>
+
+        <p class="header">This project is maintained by <a class="header name" href="https://github.com/stayradiated">stayradiated</a></p>
+
+
+      </header>
+      <section>
+        <h1>
+<a name="jandal" class="anchor" href="#jandal"><span class="octicon octicon-link"></span></a>Jandal</h1>
+
+<p>Event handler for <a href="https://github.com/sockjs/sockjs-node">SockJS</a>.</p>
+
+<h2>
+<a name="important" class="anchor" href="#important"><span class="octicon octicon-link"></span></a>Important</h2>
+
+<p>Jandal will allow you to emit a maximum of three arguments. This is purely to
+improve performance in most browsers and in nodejs.</p>
+
+<p>There is the
+<a href="https://github.com/stayradiated/jandal/multi-args">multi-args branch</a>
+branch - but it is not kept up to date. If you need to use more than three
+args, open an issue and we can sort something out.</p>
+
+<h2>
+<a name="usage" class="anchor" href="#usage"><span class="octicon octicon-link"></span></a>Usage</h2>
+
+<h3>
+<a name="server" class="anchor" href="#server"><span class="octicon octicon-link"></span></a>Server</h3>
+
+<div class="highlight highlight-javascript"><pre><span class="kd">var</span> <span class="nx">http</span><span class="p">,</span> <span class="nx">Jandal</span><span class="p">,</span> <span class="nx">sockjs</span><span class="p">,</span> <span class="nx">server</span><span class="p">,</span> <span class="nx">conn</span><span class="p">;</span>
+
+<span class="nx">http</span>   <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'http'</span><span class="p">);</span>
+<span class="nx">Jandal</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'jandal'</span><span class="p">);</span>
+<span class="nx">sockjs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'sockjs'</span><span class="p">);</span>
+
+<span class="c1">// standard sockjs stuff</span>
+<span class="nx">server</span> <span class="o">=</span> <span class="nx">http</span><span class="p">.</span><span class="nx">createServer</span><span class="p">();</span>
+<span class="nx">conn</span> <span class="o">=</span> <span class="nx">sockjs</span><span class="p">.</span><span class="nx">createServer</span><span class="p">();</span>
+<span class="nx">conn</span><span class="p">.</span><span class="nx">installHandlers</span><span class="p">(</span><span class="nx">server</span><span class="p">,</span> <span class="p">{</span> <span class="nx">prefix</span><span class="o">:</span> <span class="s1">'/socket'</span> <span class="p">});</span>
+
+<span class="c1">// Handle new connections</span>
+<span class="nx">conn</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">'connection'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">socket</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="c1">// wrap a socket in a jandal</span>
+    <span class="nx">jandal</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Jandal</span><span class="p">(</span><span class="nx">socket</span><span class="p">,</span> <span class="s1">'stream'</span><span class="p">);</span>
+
+    <span class="c1">// bind jandal events</span>
+    <span class="nx">jandal</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">'echo'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">text</span><span class="p">,</span> <span class="nx">fn</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">fn</span><span class="p">(</span><span class="s1">'server: '</span> <span class="o">+</span> <span class="nx">text</span><span class="p">);</span>
+    <span class="p">});</span>
+
+<span class="p">});</span>
+
+<span class="c1">// Start server</span>
+<span class="nx">server</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="mi">8080</span><span class="p">);</span>
+</pre></div>
+
+<h2>
+<a name="client" class="anchor" href="#client"><span class="octicon octicon-link"></span></a>Client</h2>
+
+<div class="highlight highlight-javascript"><pre><span class="kd">var</span> <span class="nx">conn</span><span class="p">,</span> <span class="nx">socket</span><span class="p">;</span>
+
+<span class="c1">// use browserify</span>
+<span class="c1">// or load the libraries as seperate scripts</span>
+<span class="nx">require</span><span class="p">(</span><span class="s1">'sockjs'</span><span class="p">);</span>
+<span class="nx">require</span><span class="p">(</span><span class="s1">'jandal/client'</span><span class="p">);</span>
+
+<span class="nx">conn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">SockJS</span><span class="p">(</span><span class="s1">'http://localhost:8080/socket'</span><span class="p">);</span>
+<span class="nx">socket</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Jandal</span><span class="p">(</span><span class="nx">conn</span><span class="p">,</span> <span class="s1">'websocket'</span><span class="p">);</span>
+
+<span class="c1">// Wait for socket to connect</span>
+<span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">'socket.open'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+    <span class="c1">// Send a message to the server with a callback</span>
+    <span class="nx">socket</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">'echo'</span><span class="p">,</span> <span class="s1">'hello'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">reply</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">reply</span><span class="p">);</span> <span class="c1">//=&gt; "server: hello"</span>
+    <span class="p">});</span>
+
+<span class="p">});</span>
+</pre></div>
+
+<h1>
+<a name="documentation" class="anchor" href="#documentation"><span class="octicon octicon-link"></span></a>Documentation</h1>
+
+<h2>
+<a name="jandal-class" class="anchor" href="#jandal-class"><span class="octicon octicon-link"></span></a>Jandal: Class</h2>
+
+<p>The <code>Jandal</code> class has a couple of static properties useful for managing
+connected sockets.</p>
+
+<h3>
+<a name="jandalall" class="anchor" href="#jandalall"><span class="octicon octicon-link"></span></a>Jandal.all</h3>
+
+<p>This is a <code>Room</code> instance that holds all the connected sockets. See the <code>Room</code>
+docs for more info.</p>
+
+<p><strong>Example:</strong></p>
+
+<div class="highlight highlight-javascript"><pre><span class="c1">// Emitting</span>
+<span class="nx">Jandal</span><span class="p">.</span><span class="nx">all</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">'hello'</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">);</span>
+
+<span class="c1">// Broadcasting</span>
+<span class="nx">Jandal</span><span class="p">.</span><span class="nx">all</span><span class="p">.</span><span class="nx">broadcast</span><span class="p">(</span><span class="s1">'socket-id'</span><span class="p">,</span> <span class="s1">'hello'</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">);</span>
+</pre></div>
+
+<h3>
+<a name="jandalinroom" class="anchor" href="#jandalinroom"><span class="octicon octicon-link"></span></a>Jandal.in(room)</h3>
+
+<p>Easily access any sockets in any room. See the <code>Room</code> docs for more info.</p>
+
+<p><strong>Parameters:</strong></p>
+
+<ul>
+<li>room (string) : the name of the room</li>
+</ul><p><strong>Example:</strong></p>
+
+<div class="highlight highlight-javascript"><pre><span class="nx">Jandal</span><span class="p">.</span><span class="k">in</span><span class="p">(</span><span class="s1">'my-room'</span><span class="p">).</span><span class="nx">emit</span><span class="p">(</span><span class="s1">'hello'</span><span class="p">);</span>
+</pre></div>
+
+<h2>
+<a name="jandal-instance" class="anchor" href="#jandal-instance"><span class="octicon octicon-link"></span></a>Jandal: Instance</h2>
+
+<p>Every Jandal instance extends the NodeJS EventEmitter so you can also use
+methods like: <code>once</code>, <code>removeAllListeners</code> and <code>setMaxListeners</code>. See the
+<a href="http://nodejs.org/api/events.html">EventEmitter docs</a> for more information.</p>
+
+<h3>
+<a name="jandalrooms" class="anchor" href="#jandalrooms"><span class="octicon octicon-link"></span></a>jandal.rooms</h3>
+
+<p>An array that holds all the rooms the socket is currently joined to.</p>
+
+<h3>
+<a name="jandalconnectsocket-handle" class="anchor" href="#jandalconnectsocket-handle"><span class="octicon octicon-link"></span></a>jandal.connect(socket, handle)</h3>
+
+<p><strong>Parameters:</strong></p>
+
+<ul>
+<li>socket (object) : an object that represents a socket</li>
+<li>handle (string|object) : a handle name or an object to use as a handle</li>
+</ul><p><strong>Example:</strong></p>
+
+<div class="highlight highlight-javascript"><pre><span class="kd">var</span> <span class="nx">jandal</span><span class="p">,</span> <span class="nx">conn</span><span class="p">;</span>
+
+<span class="nx">jandal</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Jandal</span><span class="p">();</span>
+<span class="nx">conn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">SockJS</span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">url</span><span class="p">);</span>
+
+<span class="nx">jandal</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="nx">conn</span><span class="p">,</span> <span class="s1">'websocket'</span><span class="p">);</span>
+</pre></div>
+
+<p><strong>Example with custom handles:</strong></p>
+
+<div class="highlight highlight-javascript"><pre><span class="kd">var</span> <span class="nx">jandal</span><span class="p">,</span> <span class="nx">handle</span><span class="p">,</span> <span class="nx">socket</span><span class="p">;</span>
+
+<span class="nx">jandal</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Jandal</span><span class="p">();</span>
+
+<span class="nx">socket</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">EventEmitter</span><span class="p">();</span>
+
+<span class="nx">handle</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">write</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">socket</span><span class="p">,</span> <span class="nx">message</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">socket</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">'message'</span><span class="p">,</span> <span class="nx">message</span><span class="p">);</span>
+    <span class="p">},</span>
+    <span class="nx">onread</span><span class="o">:</span> <span class="p">(</span><span class="nx">socket</span><span class="p">,</span> <span class="nx">fn</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">'message'</span><span class="p">,</span> <span class="nx">fn</span><span class="p">);</span>
+    <span class="p">},</span>
+    <span class="p">...</span>
+<span class="p">};</span>
+
+<span class="nx">jandal</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="nx">socket</span><span class="p">,</span> <span class="nx">handle</span><span class="p">);</span>
+</pre></div>
+
+<h3>
+<a name="jandalemitevent-arg1-arg2-arg3" class="anchor" href="#jandalemitevent-arg1-arg2-arg3"><span class="octicon octicon-link"></span></a>jandal.emit(event, arg1, arg2, arg3)</h3>
+
+<p>This is very similar to the NodeJS EventEmitter, but you are limited to three
+arguments.</p>
+
+<p><strong>Parameters:</strong></p>
+
+<ul>
+<li>event (string) : the event to emit</li>
+<li>arg1 (dynamic)</li>
+<li>arg2 (dynamic)</li>
+<li>arg3 (dynamic)</li>
+</ul><p>Arguments can be strings, numbers, booleans, dates, objects, arrays, etc...
+Basically anything that <code>JSON.stringify</code> can handle.</p>
+
+<p><strong>Callbacks:</strong></p>
+
+<p>You can also send one function for use as a callback.</p>
+
+<ul>
+<li>It must always be passed as the last argument.</li>
+<li>Callbacks will only be run once.</li>
+<li>They can take 0 to 3 arguments.</li>
+</ul><p><strong>Example:</strong></p>
+
+<div class="highlight highlight-javascript"><pre><span class="kd">var</span> <span class="nx">jandal</span><span class="p">;</span>
+<span class="nx">jandal</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Jandal</span><span class="p">();</span>
+
+<span class="c1">// lots of different data types</span>
+<span class="nx">jandal</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">'my-event'</span><span class="p">,</span> <span class="s1">'arg 1'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'arg 2'</span><span class="p">],</span> <span class="p">{</span><span class="nx">arg</span><span class="o">:</span> <span class="mi">3</span><span class="p">})</span>
+
+<span class="c1">// passing functions as callbacks</span>
+<span class="nx">jandal</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">'my-callback'</span><span class="p">,</span> <span class="s1">'some data'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">response</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'running the callback with'</span><span class="p">,</span> <span class="nx">response</span><span class="p">);</span>
+<span class="p">});</span>
+</pre></div>
+
+<h3>
+<a name="jandalonevent-listener" class="anchor" href="#jandalonevent-listener"><span class="octicon octicon-link"></span></a>jandal.on(event, listener)</h3>
+
+<p>Works very similar to the EventEmitter.</p>
+
+<p>However, watch out for namespaces. Listening for <code>namespace.event</code> will not
+work. You need to get the namespace?</p>
+
+<p><strong>Parameters:</strong></p>
+
+<ul>
+<li>event (string) : event to listen for</li>
+<li>listener (function) : function to run when the event is emitted</li>
+</ul><p><strong>Example:</strong></p>
+
+<div class="highlight highlight-javascript"><pre><span class="nx">jandal</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">'my-event'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">arg1</span><span class="p">,</span> <span class="nx">arg2</span><span class="p">,</span> <span class="nx">arg3</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'"my-event" has been emitted with'</span><span class="p">,</span> <span class="nx">arguments</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="c1">// listening for a namespace + event</span>
+<span class="nx">jandal</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">'task.create'</span><span class="p">,</span> <span class="nx">listener</span><span class="p">);</span>
+
+<span class="c1">// this is the same as</span>
+<span class="nx">jandal</span><span class="p">.</span><span class="nx">namespace</span><span class="p">(</span><span class="s1">'task'</span><span class="p">).</span><span class="nx">on</span><span class="p">(</span><span class="s1">'create'</span><span class="p">,</span> <span class="nx">listener</span><span class="p">);</span>
+</pre></div>
+
+<h3>
+<a name="jandalnamespacename" class="anchor" href="#jandalnamespacename"><span class="octicon octicon-link"></span></a>jandal.namespace(name)</h3>
+
+<p>Return a new Namespace instance. If the namespace already exists, it will
+use that instead of creating a new one. See the <code>Namespace</code> docs for more info.</p>
+
+<p><strong>Parameters:</strong></p>
+
+<ul>
+<li>name (string) : namespace name</li>
+</ul><p><strong>Example:</strong></p>
+
+<div class="highlight highlight-javascript"><pre><span class="kd">var</span> <span class="nx">jandal</span><span class="p">,</span> <span class="nx">ns</span><span class="p">;</span>
+
+<span class="nx">jandal</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Jandal</span><span class="p">();</span>
+<span class="nx">ns</span> <span class="o">=</span> <span class="nx">jandal</span><span class="p">.</span><span class="nx">namespace</span><span class="p">(</span><span class="s1">'app'</span><span class="p">);</span>
+
+<span class="c1">// sends "app.hello()"</span>
+<span class="nx">ns</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">'hello'</span><span class="p">);</span>
+
+<span class="c1">// listens for "app.goodbye"</span>
+<span class="nx">ns</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">'goodbye'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'bye'</span><span class="p">);</span>
+<span class="p">});</span>
+</pre></div>
+
+<h3>
+<a name="jandaljoinroom" class="anchor" href="#jandaljoinroom"><span class="octicon octicon-link"></span></a>jandal.join(room)</h3>
+
+<p>Put the socket in a room.</p>
+
+<p><strong>Parameters:</strong></p>
+
+<ul>
+<li>room (string) : name of the room</li>
+</ul><p><strong>Example:</strong></p>
+
+<div class="highlight highlight-javascript"><pre><span class="nx">jandal</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="s1">'my-room'</span><span class="p">);</span>
+</pre></div>
+
+<h3>
+<a name="jandalleaveroom" class="anchor" href="#jandalleaveroom"><span class="octicon octicon-link"></span></a>jandal.leave(room)</h3>
+
+<p>Remove the socket from a room.</p>
+
+<p><strong>Parameters:</strong></p>
+
+<ul>
+<li>room (string) : name of the room</li>
+</ul><p><strong>Example:</strong></p>
+
+<div class="highlight highlight-javascript"><pre><span class="nx">jandal</span><span class="p">.</span><span class="nx">leave</span><span class="p">(</span><span class="s1">'my-room'</span><span class="p">);</span>
+</pre></div>
+
+<h3>
+<a name="jandalroomroom" class="anchor" href="#jandalroomroom"><span class="octicon octicon-link"></span></a>jandal.room(room)</h3>
+
+<p>Returns a room. Same as <code>Jandal.in</code>.</p>
+
+<p><strong>Parameters:</strong></p>
+
+<ul>
+<li>room (string) : name of the room</li>
+</ul><p><strong>Example:</strong></p>
+
+<div class="highlight highlight-javascript"><pre><span class="c1">// add the socket to the room</span>
+<span class="nx">jandal</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="s1">'my-room'</span><span class="p">);</span>
+
+<span class="c1">// get the room</span>
+<span class="kd">var</span> <span class="nx">room</span> <span class="o">=</span> <span class="nx">jandal</span><span class="p">.</span><span class="nx">room</span><span class="p">(</span><span class="s1">'my-room'</span><span class="p">);</span>
+
+<span class="c1">// emit to all the sockets in the room</span>
+<span class="nx">room</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">'hello'</span><span class="p">);</span>
+</pre></div>
+
+<h3>
+<a name="jandalrelease" class="anchor" href="#jandalrelease"><span class="octicon octicon-link"></span></a>jandal.release()</h3>
+
+<p>Remove the socket from all the rooms it is currently in.</p>
+
+<p><strong>Example:</strong></p>
+
+<div class="highlight highlight-javascript"><pre><span class="nx">jandal</span><span class="p">.</span><span class="nx">release</span><span class="p">();</span>
+</pre></div>
+
+<h2>
+<a name="protocol" class="anchor" href="#protocol"><span class="octicon octicon-link"></span></a>Protocol</h2>
+
+<p>Jandal uses a simple protocol for encoding messages. It's based on the
+javascript syntax for objects and functions. Arguments are encoded using
+JSON.stringify.</p>
+
+<p>There are four parts to a message:</p>
+
+<ul>
+<li>namespace</li>
+<li>event</li>
+<li>args</li>
+<li>callback</li>
+</ul><p>The namespace and callback are both optional.</p>
+
+<p><strong>Example messages:</strong></p>
+
+<div class="highlight highlight-javascript"><pre><span class="c1">// event + single arg</span>
+<span class="nx">fetch</span><span class="p">(</span><span class="s2">"info"</span><span class="p">)</span>
+
+<span class="c1">// event + multiple args</span>
+<span class="nx">fetch</span><span class="p">(</span><span class="s2">"info"</span><span class="p">,{</span><span class="s2">"count"</span><span class="o">:</span><span class="mi">40</span><span class="p">})</span>
+
+<span class="c1">// event + arg + callback</span>
+<span class="nx">fetch</span><span class="p">(</span><span class="s2">"info"</span><span class="p">).</span><span class="nx">fn</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="c1">// namespace + event + arg</span>
+<span class="nx">user</span><span class="p">.</span><span class="nx">load</span><span class="p">(</span><span class="s2">"numbers"</span><span class="p">,[</span><span class="mi">10</span><span class="p">,</span><span class="mi">20</span><span class="p">,</span><span class="mi">30</span><span class="p">])</span>
+
+<span class="c1">// namespace + event + arg + callback</span>
+<span class="nx">task</span><span class="p">.</span><span class="nx">create</span><span class="p">({</span><span class="s2">"name"</span><span class="o">:</span><span class="s2">"this is a new task"</span><span class="p">}).</span><span class="nx">fn</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+
+<p><strong>Callbacks:</strong></p>
+
+<p>Each message can have a single callback. The callback must be the last
+arguments, and can only be called once.</p>
+
+<p>Callbacks are just like regular events, so you can also have a callback
+on a callback.</p>
+
+<div class="highlight highlight-javascript"><pre><span class="c1">// send a message with a callback</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">login</span><span class="p">(</span><span class="s1">'username'</span><span class="p">,</span> <span class="s1">'password'</span><span class="p">).</span><span class="nx">fn</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>
+
+<span class="c1">// response running the callback with args</span>
+<span class="nx">socket</span><span class="p">.</span><span class="nx">fn_23</span><span class="p">({</span><span class="nx">login</span><span class="o">:</span> <span class="nx">success</span><span class="p">})</span>
+
+<span class="c1">// callback with a callback</span>
+<span class="nx">socket</span><span class="p">.</span><span class="nx">fn_24</span><span class="p">({</span><span class="nx">login</span><span class="o">:</span> <span class="nx">fail</span><span class="p">}).</span><span class="nx">fn</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span>
+</pre></div>
+
+<h2>
+<a name="room-instance" class="anchor" href="#room-instance"><span class="octicon octicon-link"></span></a>Room: Instance</h2>
+
+<p>Rooms are just a collection of sockets. You can add or remove sockets from
+them, and emit events to all sockets in that room, or broadcast events from a
+socket to all other sockets.</p>
+
+<p>Every socket is added to the 'all' room, which can be acessed through
+<code>Jandal.all</code>.</p>
+
+<h3>
+<a name="roomlength" class="anchor" href="#roomlength"><span class="octicon octicon-link"></span></a>room.length()</h3>
+
+<p>Returns the number of connected sockets in a room.</p>
+
+<p><strong>Example:</strong></p>
+
+<div class="highlight highlight-javascript"><pre><span class="nx">Jandal</span><span class="p">.</span><span class="k">in</span><span class="p">(</span><span class="s1">'my-room'</span><span class="p">).</span><span class="nx">length</span><span class="p">();</span>
+</pre></div>
+
+<h3>
+<a name="roomjoinjandal" class="anchor" href="#roomjoinjandal"><span class="octicon octicon-link"></span></a>room.join(jandal)</h3>
+
+<p>Add a jandal to a room.</p>
+
+<p><strong>Parameters:</strong></p>
+
+<ul>
+<li>jandal (Jandal) : an instance of a Jandal</li>
+</ul><p><strong>Example:</strong></p>
+
+<div class="highlight highlight-javascript"><pre><span class="nx">jandal</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Jandal</span><span class="p">();</span>
+<span class="nx">Jandal</span><span class="p">.</span><span class="k">in</span><span class="p">(</span><span class="s1">'my-room'</span><span class="p">).</span><span class="nx">join</span><span class="p">(</span><span class="nx">jandal</span><span class="p">);</span>
+</pre></div>
+
+<h3>
+<a name="roomleavejandal" class="anchor" href="#roomleavejandal"><span class="octicon octicon-link"></span></a>room.leave(jandal)</h3>
+
+<p>Remove a jandal from a room.</p>
+
+<p><strong>Parameters:</strong></p>
+
+<ul>
+<li>jandal (Jandal) : an instance of a Jandal</li>
+</ul><p><strong>Example:</strong></p>
+
+<div class="highlight highlight-javascript"><pre><span class="nx">jandal</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Jandal</span><span class="p">();</span>
+<span class="nx">Jandal</span><span class="p">.</span><span class="k">in</span><span class="p">(</span><span class="s1">'my-room'</span><span class="p">).</span><span class="nx">leave</span><span class="p">(</span><span class="nx">jandal</span><span class="p">);</span>
+</pre></div>
+
+<h3>
+<a name="roomcontainsjandal" class="anchor" href="#roomcontainsjandal"><span class="octicon octicon-link"></span></a>room.contains(jandal)</h3>
+
+<p>Check if a socket is in a room. Returns <code>true</code> or <code>false</code>.</p>
+
+<p><strong>Parameters</strong></p>
+
+<ul>
+<li>jandal (Jandal) : an instance of a Jandal</li>
+</ul><p><strong>Example:</strong></p>
+
+<div class="highlight highlight-javascript"><pre><span class="kd">var</span> <span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">;</span>
+
+<span class="nx">a</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Jandal</span><span class="p">();</span>
+<span class="nx">a</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="s1">'my-room'</span><span class="p">);</span>
+
+<span class="nx">b</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Jandal</span><span class="p">();</span>
+
+<span class="nx">Jandal</span><span class="p">.</span><span class="k">in</span><span class="p">(</span><span class="s1">'my-room'</span><span class="p">).</span><span class="nx">contains</span><span class="p">(</span><span class="nx">a</span><span class="p">);</span> <span class="c1">// true</span>
+<span class="nx">Jandal</span><span class="p">.</span><span class="k">in</span><span class="p">(</span><span class="s1">'my-room'</span><span class="p">).</span><span class="nx">contains</span><span class="p">(</span><span class="nx">b</span><span class="p">);</span> <span class="c1">// false</span>
+</pre></div>
+
+<h3>
+<a name="roomemitevent-arg1-arg2-arg3" class="anchor" href="#roomemitevent-arg1-arg2-arg3"><span class="octicon octicon-link"></span></a>room.emit(event, arg1, arg2, arg3)</h3>
+
+<p>Exactly the same as <code>jandal.emit</code> but will be sent to all connected sockets.</p>
+
+<p><strong>Parameters:</strong></p>
+
+<ul>
+<li>event (string) : name of the event</li>
+<li>arg1 (dynamic)</li>
+<li>arg2 (dynamic)</li>
+<li>arg3 (dynamic)</li>
+</ul><p><strong>Example:</strong></p>
+
+<div class="highlight highlight-javascript"><pre><span class="nx">Jandal</span><span class="p">.</span><span class="k">in</span><span class="p">(</span><span class="s1">'my-room'</span><span class="p">).</span><span class="nx">emit</span><span class="p">(</span><span class="s1">'hello'</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">);</span>
+</pre></div>
+
+<h3>
+<a name="roombroadcastsender-event-arg1-arg2-arg3" class="anchor" href="#roombroadcastsender-event-arg1-arg2-arg3"><span class="octicon octicon-link"></span></a>room.broadcast(sender, event, arg1, arg2, arg3)</h3>
+
+<p>Just like emit, but will not send to the 'sender' socket.</p>
+
+<p><strong>Parameters:</strong></p>
+
+<ul>
+<li>sender (dynamic)</li>
+<li>event (string)</li>
+<li>arg1 (dynamic)</li>
+<li>arg2 (dynamic)</li>
+<li>arg3 (dynamic)</li>
+</ul><p><strong>Example:</strong></p>
+
+<div class="highlight highlight-javascript"><pre><span class="nx">Jandal</span><span class="p">.</span><span class="k">in</span><span class="p">(</span><span class="s1">'my-room'</span><span class="p">).</span><span class="nx">broadcast</span><span class="p">(</span><span class="s1">'some-id'</span><span class="p">,</span> <span class="s1">'bye'</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">);</span>
+</pre></div>
+
+<h3>
+<a name="roomnamespacename" class="anchor" href="#roomnamespacename"><span class="octicon octicon-link"></span></a>room.namespace(name)</h3>
+
+<p>Get a namespace for a room.</p>
+
+<p><strong>Parameters:</strong></p>
+
+<ul>
+<li>name (string) : the name of the namespace</li>
+</ul><p><strong>Example:</strong></p>
+
+<div class="highlight highlight-javascript"><pre><span class="nx">Jandal</span><span class="p">.</span><span class="k">in</span><span class="p">(</span><span class="s1">'my-room'</span><span class="p">).</span><span class="nx">namespace</span><span class="p">(</span><span class="s1">'tasks'</span><span class="p">).</span><span class="nx">emit</span><span class="p">(</span><span class="s1">'create'</span><span class="p">,</span> <span class="s1">'something'</span><span class="p">);</span>
+</pre></div>
+
+<h3>
+<a name="roomdestroy" class="anchor" href="#roomdestroy"><span class="octicon octicon-link"></span></a>room.destroy()</h3>
+
+<p>Destroy all sockets in a room</p>
+
+<div class="highlight highlight-javascript"><pre><span class="nx">Jandal</span><span class="p">.</span><span class="k">in</span><span class="p">(</span><span class="s1">'my-room'</span><span class="p">).</span><span class="nx">destroy</span><span class="p">()</span>
+</pre></div>
+
+<h1>
+<a name="using-rooms" class="anchor" href="#using-rooms"><span class="octicon octicon-link"></span></a>Using Rooms</h1>
+
+<p>Adding a socket to a room.</p>
+
+<pre><code>sock = new Jandal(socket);
+sock.join('my_room');
+</code></pre>
+
+<p>Removing a socket from a room</p>
+
+<pre><code>sock.leave('my_room');
+</code></pre>
+
+<p>Emitting to all sockets</p>
+
+<pre><code>Jandal.all.emit('message');
+</code></pre>
+
+<p>Emitting to all sockets in a room</p>
+
+<pre><code>Jandal.all.in('my_room').emit('message');
+
+// Alternative
+sock.in('my_room').emit('message');
+</code></pre>
+
+<p>Broadcasting to all the other sockets</p>
+
+<pre><code>sock.broadcast('hi everyone');
+</code></pre>
+
+<p>Broadcasting to other sockets in a room</p>
+
+<pre><code>sock.broadcast.to('my_room').emit('a new socket has joined');
+</code></pre>
+
+<h2>
+<a name="browsers" class="anchor" href="#browsers"><span class="octicon octicon-link"></span></a>Browsers</h2>
+
+<p>The same code can be run in the browser by using Browserify.</p>
+
+<p>This also allows you to use the library to communicate between servers, as it
+acts as the client and the server.</p>
+
+<p>To compile for the browser:</p>
+
+<pre><code>npm run-script build
+</code></pre>
+
+<p>And then either copy/paste the <code>client.js</code> file into your project, or
+include it via <code>require('jandal/client');</code>.</p>
+
+<h2>
+<a name="changelog" class="anchor" href="#changelog"><span class="octicon octicon-link"></span></a>Changelog</h2>
+
+<h3>
+<a name="0015" class="anchor" href="#0015"><span class="octicon octicon-link"></span></a>0.0.15</h3>
+
+<ul>
+<li>When broadcasting from a socket, check <code>socket.id !== sender</code> instead of
+<code>socket !== sender</code>. This requires all sockets to have an 'id' attribute.</li>
+<li>Use the <code>socket</code> namespace instead of <code>Jandal</code> for handling callbacks.</li>
+<li>Make <code>serialize</code> and <code>parse</code> private methods of a Jandal instance.</li>
+<li>Make <code>namespaces</code> and <code>callbacks</code> private properties of a Jandal instance.</li>
+<li>Remove <code>Room.prototype.in</code>
+</li>
+</ul>
+      </section>
+      <footer>
+        <p><small>Hosted on <a href="http://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+		
+  </body>
+</html>
