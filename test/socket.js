@@ -43,7 +43,7 @@ describe('Socket', function () {
   it('should serialize messages', function () {
     var string;
 
-    string = socket.serialize({
+    string = socket._serialize({
       event: 'test',
       arg1: 'one',
       arg2: 'two',
@@ -52,7 +52,7 @@ describe('Socket', function () {
 
     string.should.equal('test("one","two","three")');
 
-    string = socket.serialize({
+    string = socket._serialize({
       event: 'test',
       arg1: 'one',
       arg2: function () {}
@@ -60,7 +60,7 @@ describe('Socket', function () {
 
     string.should.equal('test("one").fn(0)');
 
-    string = socket.serialize({
+    string = socket._serialize({
       event: 'something.amazing',
       arg1: ['woo loo'],
       arg2: {oh: 'yeah'},
@@ -81,7 +81,7 @@ describe('Socket', function () {
       arg2: 'two',
       arg3: 'three'
     };
-    socket.parse('socket.test("one","two","three")').should.eql(object);
+    socket._parse('socket.test("one","two","three")').should.eql(object);
 
     object = {
       namespace: false,
@@ -90,19 +90,19 @@ describe('Socket', function () {
       arg2: 'two',
       arg3: 'three'
     };
-    socket.parse('test("one","two","three")').should.eql(object);
+    socket._parse('test("one","two","three")').should.eql(object);
 
-    socket.parse('test().fn(0)').arg1.should.have.type('function');
-    socket.parse('test("arg1").fn(0)').arg2.should.have.type('function');
+    socket._parse('test().fn(0)').arg1.should.have.type('function');
+    socket._parse('test("arg1").fn(0)').arg2.should.have.type('function');
   });
 
   it('should not break if messages cannot be parsed', function () {
-    socket.parse('socket.test(one,two,three)').should.equal(false);
-    socket.parse('some nonsense').should.equal(false);
-    socket.parse('not.a.message(")').should.equal(false);
-    socket.parse('what_could ({happen:20})').should.equal(false);
-    socket.parse('.()').should.equal(false);
-    socket.parse(undefined).should.equal(false);
+    socket._parse('socket.test(one,two,three)').should.equal(false);
+    socket._parse('some nonsense').should.equal(false);
+    socket._parse('not.a.message(")').should.equal(false);
+    socket._parse('what_could ({happen:20})').should.equal(false);
+    socket._parse('.()').should.equal(false);
+    socket._parse(undefined).should.equal(false);
   });
 
 // ----------------------------------------------------------------------------

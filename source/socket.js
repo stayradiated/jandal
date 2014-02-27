@@ -79,7 +79,7 @@ Socket.in = Room.prototype.in;
 Socket.prototype._process = function (data) {
   var message, namespace, callback, event, arg1, arg2, arg3;
 
-  message = this.parse(data);
+  message = this._parse(data);
   event = message.event;
   arg1 = message.arg1;
   arg2 = message.arg2;
@@ -158,13 +158,13 @@ Socket.prototype.namespace = function (name) {
 
 
 /*
- * Serialize
+ * (private) Serialize
  *
  * - message (object)
  * > string
  */
 
-Socket.prototype.serialize = function (message) {
+Socket.prototype._serialize = function (message) {
   var string, args, i, arg, arg1, arg2, arg3, cb;
 
   // Check for function callbacks
@@ -210,13 +210,13 @@ Socket.prototype.serialize = function (message) {
 
 
 /*
- * Parse
+ * (private) Parse
  *
  * - message (string)
  * > object
  */
 
-Socket.prototype.parse = function (message) {
+Socket.prototype._parse = function (message) {
   var namespace, event, args, match, fn;
   if (typeof message !== 'string') return false;
 
@@ -270,7 +270,7 @@ Socket.prototype.emit = function (event, arg1, arg2, arg3) {
     return this._emit(event, arg1, arg2, arg3);
   }
 
-  Socket._handle.write(this.socket, this.serialize({
+  Socket._handle.write(this.socket, this._serialize({
     event: event,
     arg1: arg1,
     arg2: arg2,

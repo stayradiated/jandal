@@ -5,66 +5,239 @@ Event handler for [SockJS](https://github.com/sockjs/sockjs-node).
 
 ## Important
 
-Jandal will allow you to emit a maximum of three arguments. This is purely to improve performance in most browsers and in nodejs.
+Jandal will allow you to emit a maximum of three arguments. This is purely to
+improve performance in most browsers and in nodejs.
 
-If you need more than three arguments, you can use the [multi-args branch](https://github.com/stayradiated/jandal/multi-args).
+There is the
+[multi-args branch](https://github.com/stayradiated/jandal/multi-args)
+branch - but it is not kept up to date. If you need to use more than three
+args, open an issue and we can sort something out.
 
-## How it works
+## Usage
 
-The idea is that we have a standard [EventEmitter](http://nodejs.org/api/events.html#events_class_events_eventemitter) handling the events, and that we serialize the information as text in the following way:
+### Server
 
-    <namespace>.<event>(<args>)
+```javascript
+var http, Jandal, sockjs, server, conn;
 
-I think this keeps messages short, simple and easy to read. Compare it something that uses JSON objects:
+http   = require('http');
+Jandal = require('jandal');
+sockjs = require('sockjs');
 
-    {"<namespace>":{"event":"<event>","args":[<args>]}}
+// standard sockjs stuff
+server = http.createServer();
+conn = sockjs.createServer();
+conn.installHandlers(server, { prefix: '/socket' });
 
-## Server Example
+// Handle new connections
+conn.on('connection', function (socket) {
 
-    var http, Jandal, sockjs, server, conn;
+    // wrap a socket in a jandal
+    jandal = new Jandal(socket, 'stream');
 
-    http   = require('http');
-    Jandal = require('jandal');
-    sockjs = require('sockjs');
-
-    Jandal.handle('node');
-
-    // standard sockjs stuff
-    server = http.createServer();
-    conn = sockjs.createServer();
-    conn.installHandlers(server, {
-        prefix: '/socket'
-    };
-
-    // create new sockets
-    conn.on('connection', function (socket) {
-        jandal = new Jandal(socket);
-        jandal.on('message', function (text, fn) {
-            fn('server: ' + text);
-        });
+    // bind jandal events
+    jandal.on('echo', function (text, fn) {
+        fn('server: ' + text);
     });
 
-    // Start server
-    server.listen(8080);
+});
 
-## Client Example
+// Start server
+server.listen(8080);
+```
 
-    var conn, socket;
+## Client
 
-    // require sockjs
-    // require jandal/build/client
+```javascript
+var conn, socket;
 
-    Jandal.handle('sockjs');
+// use browserify
+// or load the libraries as seperate scripts
+require('sockjs');
+require('jandal/client');
 
-    conn = new SockJS('http://localhost:8080/socket');
-    socket = new Jandal(conn);
+conn = new SockJS('http://localhost:8080/socket');
+socket = new Jandal(conn, 'websocket');
 
-    socket.emit('message', 'hello', function (reply) {
-        console.log(reply);
+// Wait for socket to connect
+socket.on('socket.open', function () {
+
+    // Send a message to the server with a callback
+    socket.emit('echo', 'hello', function (reply) {
+        console.log(reply); //=> "server: hello"
     });
 
+});
+```
 
-## Callbacks
+## Protocol
+
+Jandal uses a simple protocol for encoding messages. It's based on the
+javascript syntax for objects and functions.
+
+There are four parts:
+
+- namespace
+- event
+- args
+- callback
+
+The namespace and callback are both optional.
+
+**Examples:**
+
+```javascript
+// event + single arg
+fetch("info")
+
+// event + multiple args
+fetch("info",{"count":40})
+
+// event + arg + callback
+fetch("info").fn(10)
+
+// namespace + event + arg
+user.load("numbers",[10,20,30])
+
+// namespace + event + arg + callback
+task.create({"name":"this is a new task"}).fn(1)
+```
+
+## Documentation
+
+### Jandal Class
+
+#### Jandal.all
+
+This is a `Room` instance that holds all the connected sockets.
+
+**Example:**
+
+```javascript
+// Emitting
+Jandal.all.emit('hello', 1, 2,3);
+
+// Broadcasting
+Jandal.all.broadcast('socket-id', 'hello', 1, 2, 3);
+```
+
+#### Jandal.in(room)
+
+Easily access any sockets in any room.
+
+**Parameters:**
+
+- room (string)
+
+**Example:**
+
+```javascript
+Jandal.in('my-room').emit('hello');
+```
+
+### Jandal Instance
+
+Jandal extends [EventEmitter](http://nodejs.org/api/events.html), so you
+can also use these methods:
+
+- addListener(event, listener)
+- once(event, listener)
+- removeListener(event, listener)
+- removeAllListeners([event])
+- setMaxListeners(n)
+- listeners(event)
+
+#### jandal.connect(socket, handle)
+
+**Parameters:**
+
+- socket (object) : an object that represents a socket
+- handle (string|object) : a handle name or an object to use as a handle
+
+**Example:**
+
+```javascript
+var jandal, conn;
+
+jandal = new Jandal();
+conn = new SockJS(config.url);
+
+jandal.connect(conn, 'websocket');
+```
+
+**Example with custom handles:**
+
+```
+var jandal, handle, socket;
+
+jandal = new Jandal();
+
+socket = new EventEmitter();
+
+handle = {
+    write: function (socket, message) {
+        socket.emit('message', message);
+    },
+    onread: (socket, fn) {
+        socket.on('message', fn);
+    },
+    ...
+};
+
+jandal.connect(socket, handle);
+```
+
+#### jandal.namespace(name)
+
+Return a new Namespace instance. If the namespace already exists, it will
+use that instead of creating a new one.
+
+**Parameters:**
+
+- name (string) : namespace name
+
+**Example:**
+
+```javascript
+var jandal, ns;
+
+jandal = new Jandal();
+ns = jandal.namespace('app');
+
+// sends "app.hello()"
+ns.emit('hello');
+
+// listens for "app.goodbye"
+ns.on('goodbye', function () {
+    console.log('bye');
+});
+```
+
+#### jandal.emit(event, arg1, arg2, arg3)
+
+This is very similar to the NodeJS EventEmitter, but you are limited to three
+arguments.
+
+**Parameters:**
+
+- event (string)
+- arg1 (dynamic)
+- arg2 (dynamic)
+- arg3 (dynamic)
+
+#### jandal.on(event, listener)
+
+**Parameters:**
+
+#### jandal.join(room)
+
+#### jandal.leave(room)
+
+#### jandal.room(room)
+
+#### jandal.release()
+
+### Callbacks
 
 This allows you to send a function across the websocket, and have the other
 side execute it when they want to.
@@ -99,7 +272,7 @@ This works by giving each callback an id, and sending that in it's place.
 
     Jandal.fn_20(2.5)
 
-## Rooms
+### Rooms
 
 Rooms are just a collection of sockets. You can add or remove sockets from
 them, and emit events to all sockets in that room, or broadcast events from a
@@ -147,8 +320,8 @@ To compile for the browser:
 
     npm run-script build
 
-And then either copy/paste the `build/client.js` file into your project, or
-include it via `require('jandal/build/client');`.
+And then either copy/paste the `client.js` file into your project, or
+include it via `require('jandal/client');`.
 
 ## Changelog
 
