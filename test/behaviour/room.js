@@ -1,9 +1,9 @@
 var should, Room, Namespace, broadcastFrom, newSocket;
 
 should = require('should');
-Room = require('../source/room');
-Namespace = require('../source/namespace');
-broadcastFrom = require('../source/broadcast');
+Room = require('../../source/room');
+Namespace = require('../../source/namespace');
+broadcastFrom = require('../../source/broadcast');
 newSocket = require('./fake');
 
 describe('Room', function () {

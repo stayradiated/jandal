@@ -5,7 +5,7 @@
   "main": "source/jandal.js",
   "scripts": {
     "build": "browserify source/jandal.js -s Jandal | uglifyjs -cmo client.js",
-    "test": "mocha -R spec --bail test"
+    "test": "mocha -R spec --bail test/*"
   },
   "repository": {
     "type": "git",

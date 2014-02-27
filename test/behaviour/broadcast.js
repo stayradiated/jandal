@@ -3,8 +3,8 @@
 var should, Room, Broadcast, newSocket;
 
 should        = require('should');
-Room          = require('../source/room');
-Broadcast     = require('../source/broadcast');
+Room          = require('../../source/room');
+Broadcast     = require('../../source/broadcast');
 newSocket     = require('./fake');
 
 describe('Broadcast', function () {

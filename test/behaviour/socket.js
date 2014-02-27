@@ -1,8 +1,8 @@
 var Jandal, Socket, createSocket, should;
 
-Jandal = require('../source/jandal');
-Socket = require('../source/socket');
-Room = require('../source/room');
+Jandal = require('../../source/jandal');
+Socket = require('../../source/socket');
+Room = require('../../source/room');
 should = require('should');
 
 // Use node bindings

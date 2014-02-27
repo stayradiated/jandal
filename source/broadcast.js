@@ -5,13 +5,17 @@ var attach, init, broadcast, broadcastTo, Room, allSockets;
 
 /*
  * Attach
+ *
+ * - self (object) : the sender
+ * - obj (object) : what to add the methods to
+ * - [name] (string) : optional name for methods
  */
 
-attach = function (obj, self, name) {
+attach = function (self, obj, name) {
   name = name || 'broadcast';
-  self = self || obj;
-  self[name] = broadcast(obj);
-  self[name].to = broadcastTo(obj);
+  obj = obj || self;
+  obj[name] = broadcast(self);
+  obj[name].to = broadcastTo(self);
 };
 
 /*

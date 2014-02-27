@@ -2,9 +2,9 @@
 
 var Room, Namespace, Broadcast, newSocket, emitFn;
 
-Broadcast = require('../source/broadcast');
-Room = require('../source/room');
-Namespace = require('../source/namespace');
+Broadcast = require('../../source/broadcast');
+Room = require('../../source/room');
+Namespace = require('../../source/namespace');
 
 emitFn = function () {};
 
