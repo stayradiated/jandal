@@ -70,12 +70,15 @@ socket.on('socket.open', function () {
 });
 ```
 
+# Documentation
+
 ## Protocol
 
 Jandal uses a simple protocol for encoding messages. It's based on the
-javascript syntax for objects and functions.
+javascript syntax for objects and functions. Arguments are encoded using
+JSON.stringify.
 
-There are four parts:
+There are four parts to a message:
 
 - namespace
 - event
@@ -84,7 +87,7 @@ There are four parts:
 
 The namespace and callback are both optional.
 
-**Examples:**
+**Example messages:**
 
 ```javascript
 // event + single arg
@@ -103,13 +106,15 @@ user.load("numbers",[10,20,30])
 task.create({"name":"this is a new task"}).fn(1)
 ```
 
-## Documentation
+## Jandal: Class
 
-### Jandal Class
+The `Jandal` class has a couple of static properties useful for managing
+connected sockets.
 
-#### Jandal.all
+### Jandal.all
 
-This is a `Room` instance that holds all the connected sockets.
+This is a `Room` instance that holds all the connected sockets. See the `Room`
+docs for more info.
 
 **Example:**
 
@@ -121,13 +126,13 @@ Jandal.all.emit('hello', 1, 2,3);
 Jandal.all.broadcast('socket-id', 'hello', 1, 2, 3);
 ```
 
-#### Jandal.in(room)
+### Jandal.in(room)
 
-Easily access any sockets in any room.
+Easily access any sockets in any room. See the `Room` docs for more info.
 
 **Parameters:**
 
-- room (string)
+- room (string) : the name of the room
 
 **Example:**
 
@@ -135,19 +140,17 @@ Easily access any sockets in any room.
 Jandal.in('my-room').emit('hello');
 ```
 
-### Jandal Instance
+## Jandal: Instance
 
-Jandal extends [EventEmitter](http://nodejs.org/api/events.html), so you
-can also use these methods:
+Every Jandal instance extends the NodeJS EventEmitter so you can also use
+methods like: `once`, `removeAllListeners` and `setMaxListeners`. See the
+[EventEmitter docs](http://nodejs.org/api/events.html) for more information.
 
-- addListener(event, listener)
-- once(event, listener)
-- removeListener(event, listener)
-- removeAllListeners([event])
-- setMaxListeners(n)
-- listeners(event)
+### jandal.rooms
 
-#### jandal.connect(socket, handle)
+An array that holds all the rooms the socket is currently joined to.
+
+### jandal.connect(socket, handle)
 
 **Parameters:**
 
@@ -167,7 +170,7 @@ jandal.connect(conn, 'websocket');
 
 **Example with custom handles:**
 
-```
+```javascript
 var jandal, handle, socket;
 
 jandal = new Jandal();
@@ -187,10 +190,76 @@ handle = {
 jandal.connect(socket, handle);
 ```
 
-#### jandal.namespace(name)
+
+### jandal.emit(event, arg1, arg2, arg3)
+
+This is very similar to the NodeJS EventEmitter, but you are limited to three
+arguments.
+
+**Parameters:**
+
+- event (string) : the event to emit
+- arg1 (dynamic)
+- arg2 (dynamic)
+- arg3 (dynamic)
+
+Arguments can be strings, numbers, booleans, dates, objects, arrays, etc...
+Basically anything that `JSON.stringify` can handle.
+
+**Callbacks:**
+
+You can also send one function for use as a callback.
+
+- It must always be passed as the last argument.
+- Callbacks will only be run once.
+- They can take 0 to 3 arguments.
+
+**Example:**
+
+```javascript
+var jandal;
+jandal = new Jandal();
+
+// lots of different data types
+jandal.emit('my-event', 'arg 1', ['arg 2'], {arg: 3})
+
+// passing functions as callbacks
+jandal.emit('my-callback', 'some data', function (response) {
+    console.log('running the callback with', response);
+});
+```
+
+
+### jandal.on(event, listener)
+
+Works very similar to the EventEmitter.
+
+However, watch out for namespaces. Listening for `namespace.event` will not
+work. You need to get the namespace?
+
+**Parameters:**
+
+- event (string) : event to listen for
+- listener (function) : function to run when the event is emitted
+
+**Example:**
+
+```javascript
+jandal.on('my-event', function (arg1, arg2, arg3) {
+    console.log('"my-event" has been emitted with', arguments);
+});
+
+// listening for a namespace + event
+jandal.on('task.create', listener);
+
+// this is the same as
+jandal.namespace('task').on('create', listener);
+```
+
+### jandal.namespace(name)
 
 Return a new Namespace instance. If the namespace already exists, it will
-use that instead of creating a new one.
+use that instead of creating a new one. See the `Namespace` docs for more info.
 
 **Parameters:**
 
@@ -213,29 +282,65 @@ ns.on('goodbye', function () {
 });
 ```
 
-#### jandal.emit(event, arg1, arg2, arg3)
+### jandal.join(room)
 
-This is very similar to the NodeJS EventEmitter, but you are limited to three
-arguments.
-
-**Parameters:**
-
-- event (string)
-- arg1 (dynamic)
-- arg2 (dynamic)
-- arg3 (dynamic)
-
-#### jandal.on(event, listener)
+Put the socket in a room.
 
 **Parameters:**
 
-#### jandal.join(room)
+- room (string) : name of the room
 
-#### jandal.leave(room)
+**Example:**
 
-#### jandal.room(room)
+```javascript
+jandal.join('my-room');
+```
 
-#### jandal.release()
+### jandal.leave(room)
+
+Remove the socket from a room.
+
+**Parameters:**
+
+- room (string) : name of the room
+
+**Example:**
+
+```javascript
+jandal.leave('my-room');
+```
+
+### jandal.room(room)
+
+Returns a room. Same as `Jandal.in`.
+
+**Parameters:**
+
+- room (string) : name of the room
+
+**Example:**
+
+```javascript
+// add the socket to the room
+jandal.join('my-room');
+
+// get the room
+var room = jandal.room('my-room');
+
+// emit to all the sockets in the room
+room.emit('hello');
+```
+
+### jandal.release()
+
+Remove the socket from all the rooms it is currently in.
+
+**Example:**
+
+```javascript
+jandal.release();
+```
+
 
 ### Callbacks
 
@@ -329,3 +434,6 @@ include it via `require('jandal/client');`.
 
 - When broadcasting from a socket, check `socket.id !== sender` instead of
   `socket !== sender`. This requires all sockets to have an 'id' attribute.
+- Use the `socket` namespace instead of `Jandal` for handling callbacks.
+- Make `serialize` and `parse` private methods of a Jandal instance.
+- Make `namespaces` and `callbacks` private properties of a Jandal instance.
