@@ -1,42 +1,33 @@
 'use strict';
 
-var EventEmitter, Jandal, JandalC, Sandal, Socket, setup, inherits,
+var EventEmitter, Jandal, JandalC, Sandal, Socket, handler, inherits,
 
-Jandal       = require('../source/jandal');
+Jandal       = require('../index');
 JandalC      = require('../client');
 inherits     = require('../source/util').inherits;
 EventEmitter = require('events').EventEmitter;
 
 
 // Jandal handler based on an event emitter
-setup = function() {
-  var handler;
-
-  handler = {
-    identify: function (socket) {
-      return socket.id;
-    },
-    write: function(socket, message) {
-      return socket.emit('write', message);
-    },
-    onread: function(socket, fn) {
-      return socket.on('read', fn);
-    },
-    onclose: function(socket, fn) {
-      return socket.on('close', fn);
-    },
-    onerror: function(socket, fn) {
-      return socket.on('error', fn);
-    },
-    onopen: function(socket, fn) {
-      return process.nextTick(fn);
-    }
-  };
-
-  Jandal.handle(handler);
-  JandalC.handle(handler);
-
-  return handler;
+handler = {
+  identify: function (socket) {
+    return socket.id;
+  },
+  write: function(socket, message) {
+    return socket.emit('write', message);
+  },
+  onread: function(socket, fn) {
+    return socket.on('read', fn);
+  },
+  onclose: function(socket, fn) {
+    return socket.on('close', fn);
+  },
+  onerror: function(socket, fn) {
+    return socket.on('error', fn);
+  },
+  onopen: function(socket, fn) {
+    return process.nextTick(fn);
+  }
 };
 
 
@@ -103,11 +94,10 @@ Sandal = function() {
   this.clientSocket.id = 'client_' + id;
   this.serverSocket.pipe(this.clientSocket);
   this.clientSocket.pipe(this.serverSocket);
-  this.connect(this.clientSocket);
+  this.connect(this.clientSocket, handler);
   this.on('socket.close', this.end.bind(this));
 };
 
-Sandal.setup = setup;
 inherits(Sandal, Jandal);
 
 Sandal.prototype.end = function() {

@@ -1,15 +1,15 @@
-var should, Room, Namespace, broadcastFrom, newSocket;
+var should, Room, Namespace, broadcastFrom, Socket;
 
-should = require('should');
-Room = require('../../source/room');
+should    = require('should');
+Room      = require('../../source/room');
 Namespace = require('../../source/namespace');
-broadcastFrom = require('../../source/broadcast');
-newSocket = require('./fake');
+Broadcast = require('../../source/broadcast');
+Socket    = require('../fake_socket');
 
 describe('Room', function () {
 
   beforeEach(function () {
-    broadcastFrom.init(Room);
+    Broadcast.init(Room);
   });
 
   afterEach(function () {
@@ -53,22 +53,22 @@ describe('Room', function () {
     var room;
 
     room = Room.get('chicken');
-    room.join(newSocket());
+    room._join(new Socket());
 
     room.length().should.equal(1);
   });
 
   it('sockets can leave rooms', function () {
     var room, socket;
-    socket = newSocket();
+    socket = new Socket();
 
     room = Room.get('pineapple');
     room.length().should.equal(0);
 
-    room.join(socket);
+    room._join(socket);
     room.length().should.equal(1);
 
-    room.leave(socket);
+    room._leave(socket);
     room.length().should.equal(0);
   });
 
@@ -76,12 +76,12 @@ describe('Room', function () {
     var room, socket;
 
     room = Room.get('my_room');
-    socket = newSocket();
+    socket = new Socket();
 
-    room.join(socket);
+    room._join(socket);
     room.contains(socket).should.equal(true);
 
-    room.leave(socket);
+    room._leave(socket);
     room.contains(socket).should.equal(false);
   });
 
@@ -98,17 +98,17 @@ describe('Room', function () {
     var room, socket1, socket2, callCount;
 
     room = Room.get('special');
-    socket1 = newSocket();
-    socket2 = newSocket();
+    socket1 = new Socket();
+    socket2 = new Socket();
     callCount = 0;
 
-    newSocket.listen(function (event) {
+    new Socket.listen(function (event) {
       callCount++;
       event.should.equal('hello');
     });
 
-    room.join(socket1);
-    room.join(socket2);
+    room._join(socket1);
+    room._join(socket2);
     room.length().should.equal(2);
 
     room.emit('hello');
@@ -119,16 +119,16 @@ describe('Room', function () {
     var room, socket1, socket2, sender, callCount;
 
     room = Room.get('broadcast');
-    socket1 = newSocket();
-    socket2 = newSocket();
-    sender = newSocket();
+    socket1 = new Socket();
+    socket2 = new Socket();
+    sender = new Socket();
     callCount = 0;
 
-    room.join(socket1);
-    room.join(socket2);
-    room.join(sender);
+    room._join(socket1);
+    room._join(socket2);
+    room._join(sender);
 
-    newSocket.listen(function (event) {
+    new Socket.listen(function (event) {
       event.should.equal('the_broadcast');
       this.should.not.equal(sender);
       callCount++;
@@ -142,14 +142,14 @@ describe('Room', function () {
     var room, socket1, socket2, namespace, callCount;
 
     room = Room.get('room');
-    socket1 = newSocket();
-    socket2 = newSocket();
-    room.join(socket1);
-    room.join(socket2);
+    socket1 = new Socket();
+    socket2 = new Socket();
+    room._join(socket1);
+    room._join(socket2);
     namespace = room.namespace('namespace');
     callCount = 0;
 
-    newSocket.listen(function (event) {
+    new Socket.listen(function (event) {
       event.should.equal('namespace.event');
       callCount++;
     });
@@ -162,15 +162,15 @@ describe('Room', function () {
     var room, socket1, socket2, namespace, callCount;
 
     room = Room.get('room');
-    socket1 = newSocket();
-    socket2 = newSocket();
-    socket3 = newSocket();
-    room.join(socket1);
-    room.join(socket2);
-    room.join(socket3);
+    socket1 = new Socket();
+    socket2 = new Socket();
+    socket3 = new Socket();
+    room._join(socket1);
+    room._join(socket2);
+    room._join(socket3);
     callCount = 0;
 
-    newSocket.listen(function (event) {
+    new Socket.listen(function (event) {
       this.should.not.equal(socket1);
       event.should.equal('namespace.event');
       callCount++;

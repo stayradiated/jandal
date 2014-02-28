@@ -13,7 +13,7 @@ Room = {
       broadcast: function (sender, event, a1, a2, a3) {
         Room.last[name] = [sender, event, a1, a2, a3];
       }
-    }
+    };
   }
 };
 
@@ -23,7 +23,7 @@ describe('Broadcast', function () {
     Broadcast.init(Room);
   });
 
-  describe(':attach', function () {
+  describe('.attach', function () {
 
     it('should use the default values', function () {
       var obj;

@@ -1,6 +1,6 @@
 'use strict';
 
-var Socket, Namespace, Callbacks, Room, Broadcast,
+var Socket, Namespace, Callbacks, Room, Broadcast, handle,
     EventEmitter, inherits,
     EVENT_ARGS, FN, NS_EVENT, CALLBACK;
 
@@ -9,11 +9,12 @@ var Socket, Namespace, Callbacks, Room, Broadcast,
  */
 
 EventEmitter = require('events').EventEmitter;
-Namespace = require('./namespace');
-Callbacks = require('./callbacks');
-Room = require('./room');
-inherits = require('./util').inherits;
-Broadcast = require('./broadcast').init(Room);
+Namespace    = require('./namespace');
+Callbacks    = require('./callbacks');
+Room         = require('./room');
+inherits     = require('./util').inherits;
+Broadcast    = require('./broadcast').init(Room);
+handle       = require('./handle');
 
 
 /*
@@ -27,24 +28,25 @@ NS_EVENT = /^([\w-]+\.)?([^\.\(]+)$/;
 /*
  * Socket Constructor
  *
- * - [socket] (Object) : socket to send and receive messages over
+ * - [socket] (object) : socket to send and receive messages over
+ * - [handle] (string|object) : socket interface
  */
 
-Socket = function (socket) {
+Socket = function (socket, handle) {
   Socket.super_.call(this);
 
+  // public properties
   this.rooms = [];
 
-  // private vars
+  // private properties
   this._namespaces = {};
   this._callbacks = new Callbacks(this.namespace('socket'));
 
   this.join('all');
   Broadcast.attach(this);
 
-  if (socket) {
-    this.connect(socket);
-  }
+  // Set up socket and handle
+  if (socket) this.connect(socket, handle);
 
 };
 
@@ -113,30 +115,43 @@ Socket.prototype._callback = function (id) {
 
 
 /*
+ * (Private) Handle With
+ *
+ * - name (string|object) : the name of a handler, or a handler
+ */
+
+Socket.prototype._handleWith = function (name) {
+  this._handle = handle(name);
+};
+
+/*
  * Connect
  * Connect to a socket
  *
  * - socket (Object)
  */
 
-Socket.prototype.connect = function (socket) {
+Socket.prototype.connect = function (socket, handle) {
   var self = this;
-  this.socket = socket;
-  this.id = Socket._handle.identify(socket);
 
-  Socket._handle.onopen(this.socket, function (event) {
+  if (handle) this._handleWith(handle);
+
+  this.socket = socket;
+  this.id = this._handle.identify(socket);
+
+  this._handle.onopen(this.socket, function (event) {
     self._emit('socket.open', event);
   });
 
-  Socket._handle.onread(this.socket, function (message) {
+  this._handle.onread(this.socket, function (message) {
     self._process(message);
   });
 
-  Socket._handle.onerror(this.socket, function (event) {
+  this._handle.onerror(this.socket, function (event) {
     self._emit('socket.error', event);
   });
 
-  Socket._handle.onclose(this.socket, function (status, message) {
+  this._handle.onclose(this.socket, function (status, message) {
     self.release();
     self._emit('socket.close', status, message);
   });
@@ -273,7 +288,7 @@ Socket.prototype.emit = function (event, arg1, arg2, arg3) {
     return this._emit(event, arg1, arg2, arg3);
   }
 
-  Socket._handle.write(this.socket, this._serialize({
+  this._handle.write(this.socket, this._serialize({
     event: event,
     arg1: arg1,
     arg2: arg2,
@@ -295,7 +310,7 @@ Socket.prototype.join = function (room) {
   if (index < 0) {
     this.rooms.push(room);
     room = Room.get(room);
-    room.join(this);
+    room._join(this);
   }
 };
 
@@ -311,7 +326,7 @@ Socket.prototype.leave = function (room) {
   if (index > -1) {
     this.rooms.splice(index, 1);
     room = Room.get(room);
-    room.leave(this);
+    room._leave(this);
   }
 };
 

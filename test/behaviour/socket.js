@@ -1,12 +1,9 @@
 var Jandal, Socket, createSocket, should;
 
-Jandal = require('../../source/jandal');
+Jandal = require('../../index');
 Socket = require('../../source/socket');
 Room = require('../../source/room');
 should = require('should');
-
-// Use node bindings
-Jandal.handle('node');
 
 createSocket = function () {
   return {
@@ -33,7 +30,7 @@ describe('Socket', function () {
   beforeEach(function () {
     Room.flush();
     conn = createSocket();
-    socket = new Socket(conn);
+    socket = new Socket(conn, 'stream');
   });
 
 // ----------------------------------------------------------------------------

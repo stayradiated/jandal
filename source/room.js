@@ -1,225 +1,221 @@
-(function () {
+'use strict';
 
-  'use strict';
-
-  var Room, Namespace;
+var Room, Namespace;
 
 
-  /*
-   * Dependencies
-   */
+/*
+ * Dependencies
+ */
 
-  Namespace = require('./namespace');
-
-
-  /*
-   * Room Constructor
-   */
-
-  Room = function (id) {
-    this.id = id;
-    this.sockets = [];
-    this._namespaces = {};
-  };
+Namespace = require('./namespace');
 
 
-  /*
-   * (Static) Rooms
-   * Holds all the rooms in existance
-   */
+/*
+ * Room Constructor
+ */
 
-  Room.rooms = {};
+Room = function (id) {
+  this.id = id;
+  this.sockets = [];
+  this._namespaces = {};
+};
 
 
-  /*
-   * (Static) Get
-   * Get or create a room
-   *
-   * - id (string)
-   * > room
-   */
+/*
+ * (Static) Rooms
+ * Holds all the rooms in existance
+ */
 
-  Room.get = function (id) {
-    var room = Room.rooms[id];
-    if (! room) {
-      room = Room.rooms[id] = new Room(id);
+Room.rooms = {};
+
+
+/*
+ * (Static) Get
+ * Get or create a room
+ *
+ * - id (string)
+ * > room
+ */
+
+Room.get = function (id) {
+  var room = Room.rooms[id];
+  if (! room) {
+    room = Room.rooms[id] = new Room(id);
+  }
+  return room;
+};
+
+
+/*
+ * (Static) Remove
+ * Remove an entire room
+ *
+ * - id (string)
+ */
+
+Room.remove = function (id) {
+  delete Room.rooms[id];
+};
+
+
+/*
+ * (Static) Flush
+ * Remove all the rooms
+ */
+
+Room.flush = function () {
+  for (var id in Room.rooms) {
+    Room.get(id).destroy();
+  }
+};
+
+
+/*
+ * (Private) Join
+ * Add a socket to the room
+ *
+ * - socket (socket)
+ */
+
+Room.prototype._join = function (socket) {
+  if (this.sockets.indexOf(socket) < 0) {
+    this.sockets.push(socket);
+  }
+  return this;
+};
+
+
+/*
+ * (Private) Leave
+ * Remove a socket from the room
+ *
+ * - socket (socket)
+ */
+
+Room.prototype._leave = function (socket) {
+  var index = this.sockets.indexOf(socket);
+  if (index >= 0) {
+    this.sockets.splice(index, 1);
+  }
+  return this;
+};
+
+
+/*
+ * In
+ * Get another room of sockets
+ * So you can do `Jandal.sockets.in('room').emit('hi');`
+ *
+ * - id (int) : id of the room
+ * > room
+ */
+
+Room.prototype.in = function (id) {
+  return Room.get(id);
+};
+
+
+/*
+ * Length
+ * The number of sockets in the room
+ *
+ * > int
+ */
+
+Room.prototype.length = function () {
+  return this.sockets.length;
+};
+
+
+/*
+ * Emit
+ * Emit an event to everyone in the room
+ *
+ * - event (string)
+ * - args... (mixed)
+ */
+
+Room.prototype.emit = function (event, arg1, arg2, arg3) {
+  var i, len;
+  len = this.sockets.length;
+  for (i = 0; i < len; i++) {
+    this.sockets[i].emit(event, arg1, arg2, arg3);
+  }
+  return this;
+};
+
+
+/*
+ * Broadcast
+ * Emit events to everyone but the sender
+ *
+ * - sender (socket)
+ * - event (string)
+ * - args... (mixed)
+ */
+
+Room.prototype.broadcast = function (sender, event, arg1, arg2, arg3) {
+  var i, len, socket;
+  len = this.sockets.length;
+  for (i = 0; i < len; i++) {
+    socket = this.sockets[i];
+    if (socket.id !== sender) {
+      socket.emit(event, arg1, arg2, arg3);
     }
-    return room;
-  };
+  }
+  return this;
+};
 
 
-  /*
-   * (Static) Remove
-   * Remove an entire room
-   *
-   * - id (string)
-   */
+/*
+ * Namespace
+ * Get (and maybe create) a namespace for this room
+ *
+ * - name (string) : name of the namespace
+ * > namespace
+ */
 
-  Room.remove = function (id) {
-    delete Room.rooms[id];
-  };
+Room.prototype.namespace = function (name) {
+  var namespace = this._namespaces[name];
+  if (! namespace) {
+    namespace = this._namespaces[name] = new Namespace(name, this);
+  }
+  return namespace;
+};
 
 
-  /*
-   * (Static) Flush
-   * Remove all the rooms
-   */
+/*
+ * Contains
+ * Checks if a socket is already in a room
+ *
+ * - socket (socket)
+ * > boolean
+ */
 
-  Room.flush = function () {
-    for (var id in Room.rooms) {
-      Room.remove(id);
+Room.prototype.contains = function (socket) {
+  var i, len;
+  len = this.sockets.length;
+  for (i = 0; i < len; i++) {
+    if (this.sockets[i] === socket) {
+      return true;
     }
-  };
+  }
+  return false;
+};
 
 
-  /*
-   * In
-   * Get another room of sockets
-   * So you can do `Jandal.sockets.in('room').emit('hi');`
-   *
-   * - id (int) : id of the room
-   * > room
-   */
+/*
+ * Destroy
+ * Remove all sockets from a room
+ */
 
-  Room.prototype.in = function (id) {
-    return Room.get(id);
-  };
-
-
-  /*
-   * Join
-   * Add a socket to the room
-   *
-   * - socket (socket)
-   */
-
-  Room.prototype.join = function (socket) {
-    if (! (socket in this.sockets)) {
-      this.sockets.push(socket);
-    }
-    return this;
-  };
+Room.prototype.destroy = function () {
+  var i;
+  for (i = this.sockets.length - 1; i >= 0; i--) {
+    this._leave(this.sockets[i]);
+  }
+  Room.remove(this.id);
+};
 
 
-  /*
-   * Leave
-   * Remove a socket from the room
-   *
-   * - socket (socket)
-   */
-
-  Room.prototype.leave = function (socket) {
-    var index = this.sockets.indexOf(socket);
-    if (index > -1) {
-      this.sockets.splice(index, 1);
-    }
-    return this;
-  };
-
-
-  /*
-   * Length
-   * The number of sockets in the room
-   *
-   * > int
-   */
-
-  Room.prototype.length = function () {
-    return this.sockets.length;
-  };
-
-
-  /*
-   * Emit
-   * Emit an event to everyone in the room
-   *
-   * - event (string)
-   * - args... (mixed)
-   */
-
-  Room.prototype.emit = function (event, arg1, arg2, arg3) {
-    var i, len;
-    len = this.sockets.length;
-    for (i = 0; i < len; i++) {
-      this.sockets[i].emit(event, arg1, arg2, arg3);
-    }
-    return this;
-  };
-
-
-  /*
-   * Broadcast
-   * Emit events to everyone but the sender
-   *
-   * - sender (socket)
-   * - event (string)
-   * - args... (mixed)
-   */
-
-  Room.prototype.broadcast = function (sender, event, arg1, arg2, arg3) {
-    var i, len, socket;
-    len = this.sockets.length;
-    for (i = 0; i < len; i++) {
-      socket = this.sockets[i];
-      if (socket.id !== sender) {
-        socket.emit(event, arg1, arg2, arg3);
-      }
-    }
-    return this;
-  };
-
-
-  /*
-   * Namespace
-   * Get (and maybe create) a namespace for this room
-   *
-   * - name (string) : name of the namespace
-   * > namespace
-   */
-
-  Room.prototype.namespace = function (name) {
-    var namespace = this._namespaces[name];
-    if (! namespace) {
-      namespace = this._namespaces[name] = new Namespace(name, this);
-    }
-    return namespace;
-  };
-
-
-  /*
-   * Contains
-   * Checks if a socket is already in a room
-   *
-   * - socket (socket)
-   * > boolean
-   */
-
-  Room.prototype.contains = function (socket) {
-    var i, len;
-    len = this.sockets.length;
-    for (i = 0; i < len; i++) {
-      if (this.sockets[i] === socket) {
-        return true;
-      }
-    }
-    return false;
-  };
-
-
-  /*
-   * Destroy
-   * Remove all sockets from a room
-   */
-
-  Room.prototype.destroy = function () {
-    var i;
-    for (i = this.sockets.length - 1; i >= 0; i--) {
-      this.remove(this.sockets[i]);
-    }
-    Room.remove(this.id);
-  };
-
-
-  module.exports = Room;
-
-}());
+module.exports = Room;

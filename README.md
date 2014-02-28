@@ -23,6 +23,8 @@ There is also the deprecated
 
 ## Server
 
+Add it to your project with `npm install --save jandal`.
+
 ```javascript
 var http, Jandal, sockjs, server, conn;
 
@@ -63,6 +65,9 @@ conn.on('connection', function (socket) {
 ```
 
 ## Client
+
+Grab a copy of `/client.js` from this repo, or use CommonJS compiler and
+require `jandal/client`.
 
 ```javascript
 var conn, socket;
@@ -353,7 +358,7 @@ Remove the socket from all the rooms it is currently in.
 jandal.release();
 ```
 
-# Room
+# Room Class
 
 ## Instance Methods
 
@@ -372,36 +377,6 @@ Returns the number of connected sockets in a room.
 
 ```javascript
 Jandal.in('my-room').length();
-```
-
-### join(jandal)
-
-Add a jandal to a room.
-
-**Parameters:**
-
-- jandal (Jandal) : an instance of a Jandal
-
-**Example:**
-
-```javascript
-jandal = new Jandal();
-Jandal.in('my-room').join(jandal);
-```
-
-### leave(jandal)
-
-Remove a jandal from a room.
-
-**Parameters:**
-
-- jandal (Jandal) : an instance of a Jandal
-
-**Example:**
-
-```javascript
-jandal = new Jandal();
-Jandal.in('my-room').leave(jandal);
 ```
 
 ### contains(jandal)
@@ -559,3 +534,6 @@ include it via `require('jandal/client');`.
 - Use the `socket` namespace instead of `Jandal` for handling callbacks.
 - Make `serialize` and `parse` private methods of a Jandal instance.
 - Make `namespaces` and `callbacks` private properties of a Jandal instance.
+- Fix bug where Jandal would crash if a callback is called more than once
+- Make `Room.prototype.join` and `Room.prototype.leave` private.
+- Fix bug where a socket could be added to the same room twice
