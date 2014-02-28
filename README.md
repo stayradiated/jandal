@@ -458,6 +458,36 @@ Destroy all sockets in a room
 Jandal.in('my-room').destroy()
 ```
 
+# Handle
+
+Handles are used as an interface between Jandal and a socket.
+
+There are two handles bundled by default: `stream` and `websocket`.
+
+## Default Handles
+
+### Stream
+
+Works with SockJS-Node
+
+### WebSocket
+
+Works with the WebSocket API (and also SockJS-Client).
+
+## Methods
+
+### identify(socket)
+
+### write(socket, message)
+
+### onread(socket, fn)
+
+### onerror(socket, fn)
+
+### onopen(socket, fn)
+
+### onclose(socket, fn)
+
 # Protocol
 
 Jandal uses a simple protocol for encoding messages. It's based on the
