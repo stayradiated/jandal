@@ -1,8 +1,7 @@
 'use strict';
 
-var Socket, Namespace, Callbacks, Room, Broadcast, handle,
-    EventEmitter, inherits,
-    EVENT_ARGS, FN, NS_EVENT, CALLBACK;
+var Socket, Namespace, Callbacks, Room, Broadcast, Message,
+    EventEmitter, inherits, handle;
 
 /*
  * Dependencies
@@ -15,15 +14,7 @@ Room         = require('./room');
 inherits     = require('./util').inherits;
 Broadcast    = require('./broadcast').init(Room);
 handle       = require('./handle');
-
-
-/*
- * Constants
- */
-
-FN = /\.fn\((\d+)\)$/;
-EVENT_ARGS = /^([^\(]+)\((.*)\)/;
-NS_EVENT = /^([\w-]+\.)?([^\.\(]+)$/;
+Message      = require('./message');
 
 /*
  * Socket Constructor
@@ -41,6 +32,7 @@ Socket = function (socket, handle) {
   // private properties
   this._namespaces = {};
   this._callbacks = new Callbacks(this.namespace('socket'));
+  this._message = new Message(this._callbacks);
 
   this.join('all');
   Broadcast.attach(this);
@@ -81,37 +73,26 @@ Socket.in = Room.get;
  */
 
 Socket.prototype._process = function (data) {
-  var message, namespace, callback, event, arg1, arg2, arg3;
+  var message, details, namespace, ns, callback, event, arg1, arg2, arg3;
 
-  message = this._parse(data);
-  event = message.event;
+  message = this._message.parse(data);
+  details = Namespace.parse(message.event);
+
   arg1 = message.arg1;
   arg2 = message.arg2;
   arg3 = message.arg3;
 
-  namespace = this._namespaces[message.namespace];
-  if (message.namespace && namespace) {
-    namespace._emit(event, arg1, arg2, arg3);
-    this._emit(message.namespace + '.' + event, arg1, arg2, arg3);
-  } else {
-    this._emit(event, arg1, arg2, arg3);
+  event = details.event;
+  namespace = details.namespace;
+  ns = this._namespaces[namespace];
+
+  if (namespace && ns) {
+    ns._emit(event, arg1, arg2, arg3);
   }
+
+  this._emit(message.event, arg1, arg2, arg3);
 };
 
-
-/*
- * (Private) Callback
- *
- * - id (int) : the callback id
- * > function
- */
-
-Socket.prototype._callback = function (id) {
-  var self = this;
-  return function (arg1, arg2, arg3) {
-    self.emit('socket.fn_' + id, arg1, arg2, arg3);
-  };
-};
 
 
 /*
@@ -176,106 +157,6 @@ Socket.prototype.namespace = function (name) {
 };
 
 
-/*
- * (private) Serialize
- *
- * - message (object)
- * > string
- */
-
-Socket.prototype._serialize = function (message) {
-  var string, args, i, arg, arg1, arg2, arg3, cb;
-
-  // Check for function callbacks
-  for (i = 1; i < 4; i++) { // 1, 2, 3
-    arg = 'arg' + i;
-    if (typeof message[arg] === 'function') {
-      if (cb !== undefined) {
-        throw new Error('Limit of one callback per message!');
-      }
-      cb = this._callbacks.register(message[arg]);
-      message[arg] = undefined;
-    }
-  }
-
-  arg1 = message.arg1;
-  arg2 = message.arg2;
-  arg3 = message.arg3;
-
-  if (arg1 === undefined && arg2 === undefined && arg3 === undefined) {
-    args = [];
-  }
-  else if (arg2 === undefined && arg3 === undefined) {
-    args = [arg1];
-  }
-  else if (arg3 === undefined) {
-    args = [arg1, arg2];
-  }
-  else {
-    args = [arg1, arg2, arg3];
-  }
-
-  args = JSON.stringify(args);
-
-  string = message.event + '(';
-  string += args.slice(1, -1) + ')';
-
-  if (cb !== undefined) {
-    string += '.fn(' + cb + ')';
-  }
-
-  return string;
-};
-
-
-/*
- * (private) Parse
- *
- * - message (string)
- * > object
- */
-
-Socket.prototype._parse = function (message) {
-  var namespace, event, args, match, fn;
-  if (typeof message !== 'string') return false;
-
-  match = message.match(FN);
-  if (match) {
-    fn = match[1];
-    message = message.slice(0, match.index);
-  }
-
-  match = message.match(EVENT_ARGS);
-  if (! match) return false;
-
-  args = match[2];
-
-  match = match[1].match(NS_EVENT);
-  if (! match) return false;
-
-  event = match[2];
-  namespace = match[1];
-  namespace = namespace ? namespace.slice(0, -1) : false;
-
-  try {
-    args = JSON.parse('[' + args + ']');
-  } catch (e) {
-    return false;
-  }
-
-  if (fn !== undefined) {
-    args.push(this._callback(fn));
-  }
-
-  return {
-    namespace: namespace,
-    event: event,
-    arg1: args[0],
-    arg2: args[1],
-    arg3: args[2]
-  };
-};
-
 
 /*
  * Send a message through the socket
@@ -285,16 +166,15 @@ Socket.prototype._parse = function (message) {
  */
 
 Socket.prototype.emit = function (event, arg1, arg2, arg3) {
+  var message;
+
   if (event === 'newListener' || event === 'removeListener') {
     return this._emit(event, arg1, arg2, arg3);
   }
 
-  this._handle.write(this.socket, this._serialize({
-    event: event,
-    arg1: arg1,
-    arg2: arg2,
-    arg3: arg3
-  }));
+  message = this._message.serialize(event, arg1, arg2, arg3);
+
+  this._handle.write(this.socket, message);
 };
 
 

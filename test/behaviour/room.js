@@ -32,23 +32,6 @@ describe('Room', function () {
     room1.should.equal(room2);
   });
 
-  it('can destroy rooms', function () {
-    var room;
-
-    room = Room.get('thing');
-    Room.rooms.should.have.keys('all', 'thing');
-
-    Room.remove('thing');
-    Room.rooms.should.not.have.keys('thing');
-
-    room = Room.get('odd');
-    Room.rooms.should.have.keys('all', 'odd');
-
-    room.destroy();
-    Room.rooms.should.not.have.keys('odd');
-
-  });
-
   it('sockets can join rooms', function () {
     var room;
 

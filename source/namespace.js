@@ -1,7 +1,6 @@
 'use strict';
 
-var Namespace, Broadcast, EventEmitter, inherits; 
-
+var Namespace, Broadcast, EventEmitter, inherits, REGEX; 
 
 /*
  * Dependencies
@@ -37,6 +36,21 @@ Namespace = function (name, item) {
 inherits(Namespace, EventEmitter);
 Namespace.prototype._emit = EventEmitter.prototype.emit;
 
+
+Namespace.parse = function (string) {
+  var namespace, event;
+  string = string.split('.');
+  if (string.length === 2) {
+    namespace = string[0];
+    event = string[1];
+  } else {
+    event = string[0];
+  }
+  return {
+    namespace: namespace,
+    event: event
+  };
+};
 
 /*
  * Emit

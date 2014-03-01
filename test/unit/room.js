@@ -28,24 +28,6 @@ describe('Room', function () {
 
   });
 
-  describe('.remove', function () {
-
-    it('should remove a room', function () {
-      var room;
-
-      // create a new room
-      room = Room.get('my-room');
-
-      // remove the room
-      Room.remove(room.id);
-
-      // re-create the same room
-      Room.get('my-room').should.not.equal(room);
-
-    });
-
-  });
-
   describe('.flush', function () {
 
     it('should destroy all the rooms', function () {
@@ -315,21 +297,19 @@ describe('Room', function () {
 
   });
 
-  describe(':destroy', function () {
+  describe(':empty', function () {
 
-    it('should destroy a room', function () {
+    it('should empty a room', function () {
       var room, socket;
 
       room = Room.get('that-room');
       socket = new Socket();
       socket.join('that-room');
 
-      Room.get('that-room').should.equal(room);
       room.length().should.equal(1);
 
-      room.destroy();
+      room.empty();
 
-      Room.get('that-room').should.not.equal(room);
       room.length().should.equal(0);
     });
 

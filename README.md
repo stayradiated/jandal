@@ -766,6 +766,9 @@ include it via `require('jandal/client');`.
 - Fix bug where a socket could be added to the same room twice
 - Remove `Jandal.handle()`. Instead pass the handler to the `Jandal`
   constructor. e.g: `new Jandal(socket, 'stream');`.
+- Replace `room.destroy()` with `room.empty()`. No longer destroys room, just
+  removes all the connected sockets.
+- Remove `Room.remove()`.
 
 ## 0.0.14
 

@@ -47,25 +47,14 @@ Room.get = function (id) {
 
 
 /*
- * (Static) Remove
- * Remove an entire room
- *
- * - id (string)
- */
-
-Room.remove = function (id) {
-  delete Room.rooms[id];
-};
-
-
-/*
  * (Static) Flush
  * Remove all the rooms
  */
 
 Room.flush = function () {
   for (var id in Room.rooms) {
-    Room.get(id).destroy();
+    Room.get(id).empty();
+    delete Room.rooms[id];
   }
 };
 
@@ -209,12 +198,11 @@ Room.prototype.contains = function (socket) {
  * Remove all sockets from a room
  */
 
-Room.prototype.destroy = function () {
+Room.prototype.empty = function () {
   var i;
   for (i = this.sockets.length - 1; i >= 0; i--) {
     this._leave(this.sockets[i]);
   }
-  Room.remove(this.id);
 };
 
 
