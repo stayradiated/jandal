@@ -124,6 +124,7 @@ Socket.prototype._handleWith = function (name) {
   this._handle = handle(name);
 };
 
+
 /*
  * Connect
  * Connect to a socket
@@ -139,12 +140,12 @@ Socket.prototype.connect = function (socket, handle) {
   this.socket = socket;
   this.id = this._handle.identify(socket);
 
-  this._handle.onopen(this.socket, function (event) {
-    self._emit('socket.open', event);
-  });
-
   this._handle.onread(this.socket, function (message) {
     self._process(message);
+  });
+
+  this._handle.onopen(this.socket, function (event) {
+    self._emit('socket.open', event);
   });
 
   this._handle.onerror(this.socket, function (event) {
