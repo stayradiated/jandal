@@ -163,11 +163,11 @@ Every Jandal instance extends the NodeJS EventEmitter so you can also use
 methods like: `once`, `removeAllListeners` and `setMaxListeners`. See the
 [EventEmitter docs](http://nodejs.org/api/events.html) for more information.
 
-### rooms
+### jandal.rooms
 
 An array that holds all the rooms the socket is currently joined to.
 
-### connect(socket, handle)
+### jandal.connect
 
 **Parameters:**
 
@@ -208,7 +208,7 @@ jandal.connect(socket, handle);
 ```
 
 
-### emit(event, arg1, arg2, arg3)
+### jandal.emit
 
 This is very similar to the NodeJS EventEmitter, but you are limited to three
 arguments.
@@ -247,12 +247,9 @@ jandal.emit('my-callback', 'some data', function (response) {
 ```
 
 
-### on(event, listener)
+### jandal.on
 
 Works very similar to the EventEmitter.
-
-However, watch out for namespaces. Listening for `namespace.event` will not
-work. You need to get the namespace?
 
 **Parameters:**
 
@@ -273,7 +270,7 @@ jandal.on('task.create', listener);
 jandal.namespace('task').on('create', listener);
 ```
 
-### namespace(name)
+### jandal.namespace
 
 Return a new Namespace instance. If the namespace already exists, it will
 use that instead of creating a new one. See the `Namespace` docs for more info.
@@ -299,7 +296,7 @@ ns.on('goodbye', function () {
 });
 ```
 
-### join(room)
+### jandal.join
 
 Put the socket in a room.
 
@@ -313,7 +310,7 @@ Put the socket in a room.
 jandal.join('my-room');
 ```
 
-### leave(room)
+### jandal.leave
 
 Remove the socket from a room.
 
@@ -327,7 +324,7 @@ Remove the socket from a room.
 jandal.leave('my-room');
 ```
 
-### room(room)
+### jandal.room
 
 Returns a room. Same as `Jandal.in`.
 
@@ -348,7 +345,7 @@ var room = jandal.room('my-room');
 room.emit('hello');
 ```
 
-### release()
+### jandal.release
 
 Remove the socket from all the rooms it is currently in.
 
@@ -369,9 +366,13 @@ socket to all other sockets.
 Every socket is added to the 'all' room, which can be acessed through
 `Jandal.all`.
 
-### length()
+### room.length
 
 Returns the number of connected sockets in a room.
+
+**Parameters:**
+
+*No parameters*
 
 **Example:**
 
@@ -379,7 +380,7 @@ Returns the number of connected sockets in a room.
 Jandal.in('my-room').length();
 ```
 
-### contains(jandal)
+### room.contains
 
 Check if a socket is in a room. Returns `true` or `false`.
 
@@ -401,7 +402,7 @@ Jandal.in('my-room').contains(a); // true
 Jandal.in('my-room').contains(b); // false
 ```
 
-### emit(event, arg1, arg2, arg3)
+### jandal.emit
 
 Exactly the same as `jandal.emit` but will be sent to all connected sockets.
 
@@ -418,7 +419,7 @@ Exactly the same as `jandal.emit` but will be sent to all connected sockets.
 Jandal.in('my-room').emit('hello', 1, 2, 3);
 ```
 
-### broadcast(sender, event, arg1, arg2, arg3)
+### jandal.broadcast
 
 Just like emit, but will not send to the 'sender' socket.
 
@@ -436,7 +437,7 @@ Just like emit, but will not send to the 'sender' socket.
 Jandal.in('my-room').broadcast('some-id', 'bye', 1, 2, 3);
 ```
 
-### namespace(name)
+### jandal.namespace
 
 Get a namespace for a room.
 
@@ -450,7 +451,7 @@ Get a namespace for a room.
 Jandal.in('my-room').namespace('tasks').emit('create', 'something');
 ```
 
-### destroy()
+### jandal.destroy
 
 Destroy all sockets in a room
 
@@ -470,23 +471,219 @@ There are two handles bundled by default: `stream` and `websocket`.
 
 Works with SockJS-Node
 
+**Source Code:**
+
+```javascript
+stream: {
+    identify: function (socket) {
+        return socket.id;
+    },
+    write: function (socket, message) {
+        socket.write(message);
+    },
+    onread: function (socket, fn) {
+        socket.on('data', fn);
+    },
+    onclose: function (socket, fn) {
+        socket.on('close', fn);
+    },
+    onerror: function(socket, fn) {
+        socket.on('error', fn);
+    },
+    onopen: function(socket, fn) {
+        setTimeout(fn, 0);
+    }
+}
+```
+
 ### WebSocket
 
 Works with the WebSocket API (and also SockJS-Client).
 
+**Source Code:**
+
+```javascript
+websocketsId = 0;
+
+...
+
+websocket: {
+    identify: function (socket) {
+        if (socket.hasOwnProperty('id')) return socket.id;
+        socket.id = ++websocketsId;
+        return socket.id;
+    },
+    write: function (socket, message) {
+        socket.send(message);
+    },
+    onread: function (socket, fn) {
+        socket.onmessage = function (e) { fn(e.data); };
+    },
+    onclose: function (socket, fn) {
+        socket.onclose = fn;
+    },
+    onerror: function(socket, fn) {
+        socket.onerror = fn;
+    },
+    onopen: function(socket, fn) {
+        socket.onopen = fn;
+    }
+}
+```
+
 ## Methods
 
-### identify(socket)
+### identify
 
-### write(socket, message)
+Return something that identifies this socket, like an ID.
 
-### onread(socket, fn)
+**Parameters:**
+
+- socket (Socket) : the socket to identify
+
+**Example:**
+
+```javascript
+var handler = {
+    identify: function (socket) {
+
+        // if your sockets already have an id
+        return socket.id;
+
+        // maybe assign an id?
+        // HINT: better to use
+        return socket.id || socket.id = ++someNumber;
+
+        // if you don't care about anything
+        return socket;
+
+    }
+};
+```
+
+### write
+
+Write a message to the socket. Will be called whenever a message needs to be
+sent.
+
+**Parameters:**
+
+- socket (socket) : the socket to send the message with
+- message (string) : the message to send
+
+**Example:**
+
+```javascript
+var handler = {
+    write: function (socket, message) {
+        socket.write(message);
+    }
+};
+```
+
+### onread
+
+Listen for messages. Will be called once per each socket. Expects the `fn`
+callback to be passed a message whenever one is sent.
+
+**Parameters:**
+
+- socket (socket) : the socket to listen to
+- fn (function) : the callback to run
+
+**Callback Parameters:**
+
+- message (string) : the message that has been sent to the socket
+
+**Example:**
+
+```javascript
+var handler = {
+    onread: function (socket, fn) {
+        socket.on('read', fn);
+    }
+};
+```
 
 ### onerror(socket, fn)
 
+Listen for errors on the socket. Will be called only once per each socket.
+Expects `fn` to be called whenever the socket has an error. Accepts one
+argument that will be be passed through to the `socket.error` event.
+
+**Parameters:**
+
+- socket (socket) : the socket to listen to
+- fn (function) : the callback to run
+
+**Callback Parameters:**
+
+- err (dynamic) : an error message
+
+**Example:**
+
+```javascript
+var handler = {
+    onerror: function (socket, fn) {
+        socket.on('error', function (err) {
+            fn(err);
+        });
+    }
+};
+```
+
 ### onopen(socket, fn)
 
+Listen for the socket connection to be opened. Will be called once per each
+socket. Expects the `fn` callback to called once when the socket has connected.
+If the socket is already open, the you can run the callback immediately. Will
+be passed through to the `socket.open` event.
+
+**Parameters:**
+
+- socket (socket) : the socket to listen to
+- fn (function) : the callback to run
+
+**Callback Parameters:**
+
+- event (dymanic) : an optional argument to pass through to `socket.open`
+
+**Example:**
+
+```javascript
+var handler = {
+    onopen: function (socket, fn) {
+        socket.on('open', fn);
+    }
+};
+```
+
 ### onclose(socket, fn)
+
+Listen for the socket to be closed. Will be called once per each socket.
+Expects the `fn` callback to be called only once, and only when the socket has
+been closed. Arguments will be passed through to the `socket.close` event.
+
+**Parameters:**
+
+- socket (socket) : the socket to listen to
+- fn (function) : the callback to run
+
+**Callback Parameters:**
+
+- status (number) : error code
+- message (string) : error message
+
+**Example:**
+
+```javascript
+var handler = {
+    onclose: function (socket, fn) {
+        socket.on('close', fn);
+    }
+};
+```
+
 
 # Protocol
 
