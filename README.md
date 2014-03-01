@@ -402,7 +402,7 @@ Jandal.in('my-room').contains(a); // true
 Jandal.in('my-room').contains(b); // false
 ```
 
-### jandal.emit
+### room.emit
 
 Exactly the same as `jandal.emit` but will be sent to all connected sockets.
 
@@ -419,7 +419,7 @@ Exactly the same as `jandal.emit` but will be sent to all connected sockets.
 Jandal.in('my-room').emit('hello', 1, 2, 3);
 ```
 
-### jandal.broadcast
+### room.broadcast
 
 Just like emit, but will not send to the 'sender' socket.
 
@@ -437,7 +437,7 @@ Just like emit, but will not send to the 'sender' socket.
 Jandal.in('my-room').broadcast('some-id', 'bye', 1, 2, 3);
 ```
 
-### jandal.namespace
+### room.namespace
 
 Get a namespace for a room.
 
@@ -451,7 +451,7 @@ Get a namespace for a room.
 Jandal.in('my-room').namespace('tasks').emit('create', 'something');
 ```
 
-### jandal.destroy
+### room.destroy
 
 Destroy all sockets in a room
 
@@ -764,3 +764,79 @@ include it via `require('jandal/client');`.
 - Fix bug where Jandal would crash if a callback is called more than once
 - Make `Room.prototype.join` and `Room.prototype.leave` private.
 - Fix bug where a socket could be added to the same room twice
+- Remove `Jandal.handle()`. Instead pass the handler to the `Jandal`
+  constructor. e.g: `new Jandal(socket, 'stream');`.
+
+## 0.0.14
+
+- Rebuild client.js
+
+## 0.0.13
+
+- The `onclose` handler now accepts two arguments that will be passed through
+  to the `socket.close` event.
+
+## 0.0.12
+
+- Move `client.js` to the root directory. You should now use
+  `require('jandal/client')`.
+- Allow users to supply a custom socket handler.
+
+## 0.0.11
+
+- Add socket events: `socket.open`, `socket.close`, `socket.error`.
+- Fix an off by error with `Socket.prototype.serialize`, where callbacks could
+  not be the last argument.
+
+## 0.0.10
+
+- Use `.fn(20)` instead of `__fn__20` for callbacks.
+- Make sure that `Socket.prototype.parse` will only accept strings.
+
+## 0.0.9
+
+- Protect `Socket.prototype.parse` against crashing on invalid messages.
+
+## 0.0.8
+
+- Add `Socket.prototype.room` to access rooms from a jandal instance.
+- Limit event arguments to a maximum of three.
+
+## 0.0.7
+
+- Clean up code.
+- Add examples to readme.
+
+## 0.0.6
+
+- Use browserify to compile for browsers.
+- Use uglify to minify `client.js`.
+
+## 0.0.5
+
+- Set `main` to `source/jandal.js`.
+
+## 0.0.4
+
+- Add namespaces to broadcasting
+- Redo the room api
+
+## 0.0.3
+
+- Split code into multiple files.
+- Add support for sorting sockets into rooms
+
+## 0.0.2
+
+- Use handles to interface betwen jandals and sockets.
+- Fix bug with parsing messages.
+- Add `Jandal.noConflict` for browsers.
+
+## 0.0.1
+
+- Start project
+- Write `jandal.js` and tests
+- Can serialize and parse messages
+- Add namespaces
+- Can emit messages and listen for them
+- Add callback functions
