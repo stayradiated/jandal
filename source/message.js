@@ -76,7 +76,7 @@ Message.prototype.parse = function (string) {
  */
 
 
-Message.prototype.serialize = function ( event, arg1, arg2, arg3) {
+Message.prototype.serialize = function (event, arg1, arg2, arg3) {
   var string, args, i, len, arg, callback;
 
   if (arg1 === undefined && arg2 === undefined && arg3 === undefined) {
@@ -107,9 +107,7 @@ Message.prototype.serialize = function ( event, arg1, arg2, arg3) {
 
   // Convert to string
   args = JSON.stringify(args);
-
   string = event;
-
   string += '(' + args.slice(1, -1) + ')';
   if (callback !== undefined) string += '.fn(' + callback + ')';
 
