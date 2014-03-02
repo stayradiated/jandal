@@ -1,7 +1,8 @@
 'use strict';
 
-var Socket, Room, Connection, handle;
+var should, Socket, Room, Connection, handle;
 
+should = require('should');
 Socket = require('../../source/socket');
 Room = require('../../source/room');
 Connection = require('events').EventEmitter;
@@ -28,6 +29,8 @@ handle = {
 };
 
 describe('Socket', function () {
+  
+  var conn, socket;
 
   before(function () {
     Socket.all = Room.get('all');
@@ -35,6 +38,8 @@ describe('Socket', function () {
 
   beforeEach(function () {
     Room.get('all').empty();
+    conn = new Connection();
+    socket = new Socket(conn, handle);
   });
 
   describe('.all', function () {
@@ -46,10 +51,6 @@ describe('Socket', function () {
   describe(':constructor', function () {
 
     it('should create a new Socket', function () {
-      var conn, socket;
-      Socket.all.length().should.equal(0);
-      conn = new Connection();
-      socket = new Socket(conn, handle);
       socket.rooms.should.be.an.instanceOf(Array);
       socket.broadcast.should.have.type('function');
       Socket.all.length().should.equal(1);
@@ -58,6 +59,29 @@ describe('Socket', function () {
   });
 
   describe(':_process', function () {
+
+    it('should pass args with the event', function () {
+      var data;
+
+      conn.once('message', function (event, arg1, arg2) {
+        event.should.equal('fn');
+        arg1.should.equal('run');
+        should.equal(undefined, arg2);
+      });
+
+      data = 'fn("run")';
+      socket._process(data);
+
+    });
+
+    it('should emit to namespaces as well', function () {
+      var data;
+
+      conn.once('message', function(event, arg) {
+      });
+
+    });
+
   });
 
   describe(':_handleWith', function () {
