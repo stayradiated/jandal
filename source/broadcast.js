@@ -5,18 +5,20 @@ var Room, allSockets;
 
 
 /*
- * Attach
+ * bind
  *
  * - self (object) : the sender
  * - obj (object) : what to add the methods to
  * - [name] (string) : optional name for methods
  */
 
-var attach = function attach (self, obj, name) {
-  name = name || 'broadcast';
-  obj = obj || self;
-  obj[name] = broadcast(self);
-  obj[name].to = broadcastTo(self);
+var bind = function bind (self) {
+  var obj = broadcast(self);
+  obj.to = broadcastTo(self);
+  return obj;
+};
+
+var detach = function (self, obj, name) {
 };
 
 /*
@@ -67,6 +69,6 @@ var init = function init (_room) {
 
 
 module.exports = {
-  attach: attach,
+  bind: bind,
   init: init
 };

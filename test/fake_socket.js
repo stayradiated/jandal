@@ -10,7 +10,7 @@ var emitFn;
 
 var Socket = function () {
   this.id = ++Socket.id;
-  Broadcast.attach(this);
+  this.broadcast = Broadcast.bind(this);
   Room.get('all')._join(this);
 };
 

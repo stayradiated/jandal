@@ -22,8 +22,7 @@ var Namespace = function Namespace (name, item) {
 
   this.name = name;
   this.item = item;
-
-  Broadcast.attach(this.item, this, '_broadcast');
+  this._broadcast = Broadcast.bind(this.item);
 };
 
 
@@ -73,6 +72,17 @@ Namespace.prototype.emit = function emit (event, arg1, arg2, arg3) {
 Namespace.prototype.broadcast = function broadcast (event, arg1, arg2, arg3) {
   event = this.name + '.' + event;
   this._broadcast(event, arg1, arg2, arg3);
+};
+
+
+/*
+ * (Private) Release
+ */
+
+Namespace.prototype._release = function release () {
+  delete this.name;
+  delete this.item;
+  delete this._broadcast;
 };
 
 

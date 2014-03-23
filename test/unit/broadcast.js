@@ -21,28 +21,15 @@ describe('Broadcast', function () {
     Broadcast.init(Room);
   });
 
-  describe('.attach', function () {
+  describe('.bind', function () {
 
-    it('should use the default values', function () {
+    it('should bind to obj', function () {
       var obj = {};
 
-      Broadcast.attach(obj);
+      var broadcast = Broadcast.bind(obj);
 
-      obj.should.have.keys('broadcast');
-      obj.broadcast.should.have.keys('to');
-    });
-
-    it('should use a custom self and method', function () {
-      var obj = { id: 'obj' };
-      var self = { id: 'self' };
-
-      Broadcast.attach(self, obj, 'thing');
-
-      obj.should.have.keys('id', 'thing');
-      self.should.have.keys('id');
-
-      obj.thing('event');
-      Room.last.all.should.eql([ 'self', 'event', null, null, null ]);
+      broadcast.should.have.type('function');
+      broadcast.to.should.have.type('function');
     });
 
   });
@@ -51,10 +38,9 @@ describe('Broadcast', function () {
 
     it('should remember itself', function () {
       var obj = { id: 'self' };
-      Broadcast.attach(obj);
+      var broadcast = Broadcast.bind(obj);
 
-      obj.broadcast('event', 1, 2, 3);
-
+      broadcast('event', 1, 2, 3);
       Room.last.all.should.eql([ 'self', 'event', 1, 2, 3 ]);
     });
 
@@ -64,9 +50,9 @@ describe('Broadcast', function () {
 
     it('should broadcast to a room', function () {
       var obj = { id: 'self' };
-      Broadcast.attach(obj);
+      var broadcast = Broadcast.bind(obj);
 
-      obj.broadcast.to('my_room').emit('event', 1, 2, 3);
+      broadcast.to('my_room').emit('event', 1, 2, 3);
 
       Room.last.my_room.should.eql([ 'self', 'event', 1, 2, 3 ]);
     });

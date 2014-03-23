@@ -492,6 +492,11 @@ stream: {
     },
     onopen: function(socket, fn) {
         setTimeout(fn, 0);
+    },
+    release: function (socket) {
+        socket.removeAllListeners('data');
+        socket.removeAllListeners('close');
+        socket.removeAllListeners('error');
     }
 }
 ```
@@ -527,6 +532,12 @@ websocket: {
     },
     onopen: function(socket, fn) {
         socket.onopen = fn;
+    },
+    release: function (socket) {
+        delete socket.onmessage;
+        delete socket.onclose;
+        delete socket.onerror;
+        delete socket.onopen;
     }
 }
 ```
@@ -684,6 +695,26 @@ var handler = {
 };
 ```
 
+### release(socket)
+
+Disconnect the raw socket from the jandal instance.
+
+**Parameters:**
+
+- socket (socket) : the socket to listen to
+
+**Example:**
+
+```javascript
+var handler = {
+    release: function (socket) {
+        socket.off('data');
+        socket.off('open');
+        socket.off('close');
+        socket.off('error');
+    }
+};
+```
 
 # Protocol
 

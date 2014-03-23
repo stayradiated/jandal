@@ -26,6 +26,11 @@ var handles = {
     },
     onopen: function streamOnOpen (socket, fn) {
       setTimeout(fn, 0);
+    },
+    release: function streamRelease (socket) {
+      socket.removeListener('data');
+      socket.removeListener('close');
+      socket.removeListener('error');
     }
   },
 
@@ -51,6 +56,12 @@ var handles = {
     },
     onopen: function websocketOnOpen (socket, fn) {
       socket.onopen = fn;
+    },
+    release: function websocketRelease (socket) {
+      socket.onmessage = undefined;
+      socket.onclose = undefined;
+      socket.onopen = undefined;
+      socket.onerror = undefined;
     }
   }
 

@@ -25,6 +25,7 @@ var Socket = function Socket (socket, handle) {
 
   // public properties
   this.rooms = [];
+  this.broadcast = Broadcast.bind(this);
 
   // private properties
   this._namespaces = {};
@@ -32,7 +33,6 @@ var Socket = function Socket (socket, handle) {
   this._message = new Message(this._callbacks);
 
   this.join('all');
-  Broadcast.attach(this);
 
   // Set up socket and handle
   if (socket) this.connect(socket, handle);
@@ -150,7 +150,6 @@ Socket.prototype.namespace = function namespace (name) {
 };
 
 
-
 /*
  * Send a message through the socket
  *
@@ -214,13 +213,34 @@ Socket.prototype.room = Room.get;
 
 /*
  * Release
+ *
+ * Forget everything.
  */
 
 Socket.prototype.release = function release () {
+
+  this._handle.release(this.socket);
+
   var len = this.rooms.length;
   for (var i = len - 1; i >= 0; i--) {
     this.leave(this.rooms[i]);
   }
+
+  for (var key in this._namespaces) {
+    this._namespaces[key]._release();
+  }
+
+  this._callbacks.release();
+  this._message.release();
+
+  delete this._namespaces;
+  delete this._callbacks;
+  delete this._message;
+  delete this.socket;
+  delete this.broadcast;
+  delete this.rooms;
+  delete this.id;
+  delete this._handle;
 };
 
 

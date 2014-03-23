@@ -70,4 +70,15 @@ Callbacks.prototype.getFn = function getFn (id) {
 };
 
 
+/*
+ * Release
+ */
+
+Callbacks.prototype.release = function release () {
+  delete this.collection;
+  delete this.index;
+  delete this.namespace;
+};
+
+
 module.exports = Callbacks;

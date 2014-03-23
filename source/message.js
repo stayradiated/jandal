@@ -111,4 +111,13 @@ Message.prototype.serialize = function serialize (event, arg1, arg2, arg3) {
 };
 
 
+/*
+ * Release
+ */
+
+Message.prototype.release = function () {
+  delete this.callbacks;
+};
+
+
 module.exports = Message;

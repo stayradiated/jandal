@@ -194,4 +194,19 @@ Room.prototype.empty = function empty () {
 };
 
 
+/*
+ * Release
+ * Forget everything
+ */
+
+Room.prototype.release = function () {
+  this.empty();
+  delete this.id;
+  delete this.sockets;
+  delete this._namespaces;
+};
+
+
+
+
 module.exports = Room;

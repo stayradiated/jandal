@@ -24,6 +24,12 @@ var handle = {
   onclose: function (socket, fn) {
     socket.on('close', fn);
   },
+  release: function (socket) {
+    socket.removeAllListeners('message');
+    socket.removeAllListeners('error');
+    socket.removeAllListeners('open');
+    socket.removeAllListeners('close');
+  }
 };
 
 describe('Socket', function () {
@@ -245,7 +251,7 @@ describe('Socket', function () {
       socket.release();
 
       Socket.all.length().should.equal(0);
-      socket.rooms.should.eql([]);
+      should.equal(undefined, socket.rooms);
 
     });
 
