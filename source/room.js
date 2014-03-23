@@ -1,20 +1,17 @@
 'use strict';
 
-var Room, Namespace;
-
-
 /*
  * Dependencies
  */
 
-Namespace = require('./namespace');
+var Namespace = require('./namespace');
 
 
 /*
  * Room Constructor
  */
 
-Room = function (id) {
+var Room = function Room (id) {
   this.id = id;
   this.sockets = [];
   this._namespaces = {};
@@ -37,7 +34,7 @@ Room.rooms = {};
  * > room
  */
 
-Room.get = function (id) {
+Room.get = function get (id) {
   var room = Room.rooms[id];
   if (! room) {
     room = Room.rooms[id] = new Room(id);
@@ -51,7 +48,7 @@ Room.get = function (id) {
  * Remove all the rooms
  */
 
-Room.flush = function () {
+Room.flush = function flush () {
   for (var id in Room.rooms) {
     Room.get(id).empty();
     delete Room.rooms[id];
@@ -66,7 +63,7 @@ Room.flush = function () {
  * - socket (socket)
  */
 
-Room.prototype._join = function (socket) {
+Room.prototype._join = function _join (socket) {
   if (this.sockets.indexOf(socket) < 0) {
     this.sockets.push(socket);
   }
@@ -81,7 +78,7 @@ Room.prototype._join = function (socket) {
  * - socket (socket)
  */
 
-Room.prototype._leave = function (socket) {
+Room.prototype._leave = function _leave (socket) {
   var index = this.sockets.indexOf(socket);
   if (index >= 0) {
     this.sockets.splice(index, 1);
@@ -99,7 +96,7 @@ Room.prototype._leave = function (socket) {
  * > room
  */
 
-Room.prototype.in = function (id) {
+Room.prototype.in = function in_ (id) {
   return Room.get(id);
 };
 
@@ -111,7 +108,7 @@ Room.prototype.in = function (id) {
  * > int
  */
 
-Room.prototype.length = function () {
+Room.prototype.length = function length () {
   return this.sockets.length;
 };
 
@@ -124,10 +121,8 @@ Room.prototype.length = function () {
  * - args... (mixed)
  */
 
-Room.prototype.emit = function (event, arg1, arg2, arg3) {
-  var i, len;
-  len = this.sockets.length;
-  for (i = 0; i < len; i++) {
+Room.prototype.emit = function emit (event, arg1, arg2, arg3) {
+  for (var i = 0, len = this.sockets.length; i < len; i++) {
     this.sockets[i].emit(event, arg1, arg2, arg3);
   }
   return this;
@@ -143,11 +138,9 @@ Room.prototype.emit = function (event, arg1, arg2, arg3) {
  * - args... (mixed)
  */
 
-Room.prototype.broadcast = function (sender, event, arg1, arg2, arg3) {
-  var i, len, socket;
-  len = this.sockets.length;
-  for (i = 0; i < len; i++) {
-    socket = this.sockets[i];
+Room.prototype.broadcast = function broadcast (sender, event, arg1, arg2, arg3) {
+  for (var i = 0, len = this.sockets.length; i < len; i++) {
+    var socket = this.sockets[i];
     if (socket.id !== sender) {
       socket.emit(event, arg1, arg2, arg3);
     }
@@ -164,12 +157,10 @@ Room.prototype.broadcast = function (sender, event, arg1, arg2, arg3) {
  * > namespace
  */
 
-Room.prototype.namespace = function (name) {
-  var namespace = this._namespaces[name];
-  if (! namespace) {
-    namespace = this._namespaces[name] = new Namespace(name, this);
-  }
-  return namespace;
+Room.prototype.namespace = function namespace (name) {
+  var ns = this._namespaces[name];
+  ns = ns ? ns : this._namespaces[name] = new Namespace(name, this);
+  return ns;
 };
 
 
@@ -181,10 +172,8 @@ Room.prototype.namespace = function (name) {
  * > boolean
  */
 
-Room.prototype.contains = function (socket) {
-  var i, len;
-  len = this.sockets.length;
-  for (i = 0; i < len; i++) {
+Room.prototype.contains = function contains (socket) {
+  for (var i = 0, len = this.sockets.length; i < len; i++) {
     if (this.sockets[i] === socket) {
       return true;
     }
@@ -198,9 +187,8 @@ Room.prototype.contains = function (socket) {
  * Remove all sockets from a room
  */
 
-Room.prototype.empty = function () {
-  var i;
-  for (i = this.sockets.length - 1; i >= 0; i--) {
+Room.prototype.empty = function empty () {
+  for (var i = this.sockets.length - 1; i >= 0; i--) {
     this._leave(this.sockets[i]);
   }
 };

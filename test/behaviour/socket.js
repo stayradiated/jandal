@@ -1,11 +1,11 @@
-var Jandal, Socket, createSocket, should;
+'use strict';
 
-Jandal = require('../../index');
-Socket = require('../../source/socket');
-Room = require('../../source/room');
-should = require('should');
+var Jandal = require('../../index');
+var Socket = require('../../source/socket');
+var Room = require('../../source/room');
+var should = require('should');
 
-createSocket = function () {
+var createSocket = function () {
   return {
     last: null,
     reply: null,
@@ -75,18 +75,14 @@ describe('Socket', function () {
 // ----------------------------------------------------------------------------
 
   it('should create namespaces', function () {
-    var shoe;
-
-    shoe = socket.namespace('shoe');
+    var shoe = socket.namespace('shoe');
 
     // Should re-use the same namespace
     shoe.should.equal(socket.namespace('shoe'));
   });
 
   it('should prefix namespaced events', function () {
-    var shoe;
-
-    shoe = socket.namespace('shoe');
+    var shoe = socket.namespace('shoe');
 
     shoe.emit('event', 'hello', 'world');
     expect('shoe.event("hello","world")');
@@ -96,9 +92,7 @@ describe('Socket', function () {
   });
 
   it('should respond to namespaced events', function () {
-    var shoe, total;
-
-    shoe = socket.namespace('shoe');
+    var shoe = socket.namespace('shoe');
 
     shoe.on('event', function (a, b) {
       a.should.have.type('string');
@@ -110,10 +104,8 @@ describe('Socket', function () {
   });
 
   it('should not mix events between namespaces', function () {
-    var shoe, sandal, type;
-
-    shoe = socket.namespace('shoe');
-    sandal = socket.namespace('sandal');
+    var shoe = socket.namespace('shoe');
+    var sandal = socket.namespace('sandal');
 
     socket.on('event', function () {
       type = 'socket';
@@ -127,7 +119,7 @@ describe('Socket', function () {
       type = 'sandal';
     });
 
-    type = '';
+    var type = '';
     conn.reply('event("test")');
     type.should.equal('socket');
 
@@ -146,21 +138,16 @@ describe('Socket', function () {
 // ----------------------------------------------------------------------------
 
   it('should convert functions into callback handlers', function () {
-
-    var fn;
-
-    fn = function () { };
+    var fn = function () { };
 
     socket.emit('event', fn);
     expect('event().fn(0)');
 
     socket.emit('event', fn);
     expect('event().fn(1)');
-
   });
 
   it('should trigger callbacks', function () {
-
     socket.on('event', function (callback) {
       callback.should.have.type('function');
       callback();
@@ -168,24 +155,19 @@ describe('Socket', function () {
 
     conn.reply('event().fn(20)');
     expect('socket.fn_20()');
-
   });
 
   it('should trigger callback with arguments', function () {
-
     socket.on('event', function (callback) {
       callback('hello', 'world');
     });
 
     conn.reply('event().fn(10)');
     expect('socket.fn_10("hello","world")');
-
   });
 
   it('should run callbacks', function (done) {
-    var fn;
-
-    fn = function (a, b) {
+    var fn = function (a, b) {
       a.should.equal('some');
       b.should.equal('arguments');
       done();
@@ -193,7 +175,6 @@ describe('Socket', function () {
 
     socket.emit('event', fn);
     conn.reply('socket.fn_0("some","arguments")');
-
   });
 
 

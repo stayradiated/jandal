@@ -1,13 +1,11 @@
 'use strict';
 
-var should, Socket, Room, Connection, handle;
+var should = require('should');
+var Socket = require('../../source/socket');
+var Room = require('../../source/room');
+var Connection = require('events').EventEmitter;
 
-should = require('should');
-Socket = require('../../source/socket');
-Room = require('../../source/room');
-Connection = require('events').EventEmitter;
-
-handle = {
+var handle = {
   identify: function (socket) {
     return socket;
   },
@@ -82,8 +80,6 @@ describe('Socket', function () {
   describe(':_process', function () {
 
     it('should pass args with the event', function (done) {
-      var data;
-
       socket.once('fn', function (arg1, arg2, arg3) {
         arg1.should.equal('a');
         arg2.should.equal('b');
@@ -91,14 +87,12 @@ describe('Socket', function () {
         done();
       });
 
-      data = 'fn("a", "b", "c")';
+      var data = 'fn("a", "b", "c")';
       socket._process(data);
 
     });
 
     it('should emit namespaces as events', function (done) {
-      var data;
-
       socket.once('ns.fn', function(arg1, arg2, arg3) {
         arg1.should.equal('a');
         arg2.should.equal('b');
@@ -106,15 +100,13 @@ describe('Socket', function () {
         done();
       });
 
-      data = 'ns.fn("a", "b", "c")';
+      var data = 'ns.fn("a", "b", "c")';
       socket._process(data);
 
     });
 
 
     it('should emit to namespaces', function (done) {
-      var data;
-
       socket.namespace('ns').once('fn', function(arg1, arg2, arg3) {
         arg1.should.equal('a');
         arg2.should.equal('b');
@@ -122,7 +114,7 @@ describe('Socket', function () {
         done();
       });
 
-      data = 'ns.fn("a", "b", "c")';
+      var data = 'ns.fn("a", "b", "c")';
       socket._process(data);
 
     });
@@ -169,7 +161,6 @@ describe('Socket', function () {
   describe(':namespace', function () {
 
     it('should get a namespace', function (done) {
-
       var ns = socket.namespace('name');
 
       ns.name.should.equal('name');
@@ -183,7 +174,6 @@ describe('Socket', function () {
       });
 
       socket.emit('name.event', 'a', 'b', 'c');
-
     });
 
   });

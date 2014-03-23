@@ -1,15 +1,13 @@
 'use strict';
 
-var EventEmitter, Jandal, JandalC, Sandal, Socket, handler, inherits,
-
-Jandal       = require('../index');
-JandalC      = require('../client');
-inherits     = require('../source/util').inherits;
-EventEmitter = require('events').EventEmitter;
+var Jandal       = require('../index');
+var JandalC      = require('../client');
+var inherits     = require('../source/util').inherits;
+var EventEmitter = require('events').EventEmitter;
 
 
 // Jandal handler based on an event emitter
-handler = {
+var handler = {
   identify: function (socket) {
     return socket.id;
   },
@@ -41,7 +39,7 @@ handler = {
  *
  */
 
-Socket = function () {
+var Socket = function () {
   this.end   = this.end.bind(this);
   this.close = this.close.bind(this);
   this.pipe  = this.pipe.bind(this);
@@ -82,12 +80,10 @@ Socket.prototype.close = function(status, message) {
  * For when you need to test Jandal
  */
 
-Sandal = function() {
-  var id;
-
+var Sandal = function() {
   Sandal.super_.call(this);
 
-  id = Math.floor(Math.random() * 1000);
+  var id = Math.floor(Math.random() * 1000);
   this.serverSocket = new Socket();
   this.serverSocket.id = 'server_' + id;
   this.clientSocket = new Socket();

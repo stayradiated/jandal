@@ -1,10 +1,8 @@
 'use strict';
 
-var Room, Socket, should;
-
-should = require('should');
-Room   = require('../../source/room');
-Socket = require('../fake_socket');
+var should = require('should');
+var Room   = require('../../source/room');
+var Socket = require('../fake_socket');
 
 describe('Room', function () {
 
@@ -15,10 +13,9 @@ describe('Room', function () {
   describe('.get', function() {
 
     it('should get a room', function () {
-      var room;
 
       // Creates it if it doesn't exist
-      room = Room.get('some-room');
+      var room = Room.get('some-room');
       room.should.be.an.instanceOf(Room);
 
       // Reuse the same instance
@@ -31,13 +28,12 @@ describe('Room', function () {
   describe('.flush', function () {
 
     it('should destroy all the rooms', function () {
-      var room, socket;
 
       // create a new room
-      room = Room.get('a');
+      var room = Room.get('a');
 
       // add a socket to the room
-      socket = new Socket();
+      var socket = new Socket();
       socket.join('a');
       room.sockets.should.have.length(1);
 
@@ -56,9 +52,7 @@ describe('Room', function () {
   describe(':constructor', function () {
 
     it('should create a new Room', function () {
-      var room;
-
-      room = new Room('my-room');
+      var room = new Room('my-room');
 
       room.should.have.keys('id', 'sockets', '_namespaces');
       room.id.should.equal('my-room');
@@ -72,10 +66,8 @@ describe('Room', function () {
   describe(':_join', function () {
 
     it('should add a socket to a room', function () {
-      var room, socket;
-
-      room = new Room('my-room');
-      socket = new Socket();
+      var room = new Room('my-room');
+      var socket = new Socket();
 
       room._join(socket);
       room.length().should.equal(1);
@@ -96,10 +88,8 @@ describe('Room', function () {
   describe(':_leave', function () {
 
     it('should remove a socket from a room', function () {
-      var room, socket;
-
-      room = new Room('my-awesome-room');
-      socket = new Socket();
+      var room = new Room('my-awesome-room');
+      var socket = new Socket();
 
       room.length().should.equal(0);
 
@@ -121,10 +111,8 @@ describe('Room', function () {
   describe(':in', function () {
 
     it('should proxy Room.get', function () {
-      var a, b;
-
-      a = Room.get('a');
-      b = Room.get('b');
+      var a = Room.get('a');
+      var b = Room.get('b');
 
       a.in('a').should.equal(a);
       a.in('b').should.equal(b);
@@ -137,9 +125,7 @@ describe('Room', function () {
   describe(':length', function () {
 
     it('should count how many sockets are in a room', function () {
-      var room;
-
-      room = new Room('my-room');
+      var room = new Room('my-room');
       room.length().should.equal(0);
 
       room._join('a');
@@ -172,13 +158,11 @@ describe('Room', function () {
   describe(':emit', function () {
 
     it('should emit to all sockets in a room', function () {
-      var room, a, b, c;
+      var room = Room.get('my-room');
 
-      room = Room.get('my-room');
-
-      a = new Socket();
-      b = new Socket();
-      c = new Socket();
+      var a = new Socket();
+      var b = new Socket();
+      var c = new Socket();
 
       a.join('my-room');
       b.join('my-room');
@@ -225,13 +209,11 @@ describe('Room', function () {
   describe(':broadcast', function () {
 
     it('should broadcast to all sockets in a room', function () {
-      var room, a, b, c;
-
-      room = Room.get('my-room');
+      var room = Room.get('my-room');
       
-      a = new Socket();
-      b = new Socket();
-      c = new Socket();
+      var a = new Socket();
+      var b = new Socket();
+      var c = new Socket();
 
       a.join('my-room');
       b.join('my-room');
@@ -264,10 +246,8 @@ describe('Room', function () {
   describe(':namespace', function () {
 
     it('should get a namespace for a room', function () {
-      var room, ns;
-
-      room = new Room('with-a-ns');
-      ns = room.namespace('my-ns');
+      var room = new Room('with-a-ns');
+      var ns = room.namespace('my-ns');
 
       room.namespace('my-ns').should.equal(ns);
       room.namespace('my-other-ns').should.not.equal(ns);
@@ -278,11 +258,9 @@ describe('Room', function () {
   describe(':contains', function () {
 
     it('should check if a room contains a socket', function () {
-      var room, socket;
+      var room = Room.get('your-room');
 
-      room = Room.get('your-room');
-
-      socket = new Socket();
+      var socket = new Socket();
       room.contains(socket).should.equal(false);
 
       socket.join('your-room');
@@ -300,10 +278,8 @@ describe('Room', function () {
   describe(':empty', function () {
 
     it('should empty a room', function () {
-      var room, socket;
-
-      room = Room.get('that-room');
-      socket = new Socket();
+      var room = Room.get('that-room');
+      var socket = new Socket();
       socket.join('that-room');
 
       room.length().should.equal(1);

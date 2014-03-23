@@ -1,6 +1,7 @@
 'use strict';
 
-var attach, init, broadcast, broadcastTo, Room, allSockets;
+// delayed dependencies
+var Room, allSockets;
 
 
 /*
@@ -11,7 +12,7 @@ var attach, init, broadcast, broadcastTo, Room, allSockets;
  * - [name] (string) : optional name for methods
  */
 
-attach = function (self, obj, name) {
+var attach = function attach (self, obj, name) {
   name = name || 'broadcast';
   obj = obj || self;
   obj[name] = broadcast(self);
@@ -25,8 +26,8 @@ attach = function (self, obj, name) {
  * - args... (mixed)
  */
 
-broadcast = function (self) {
-  return function (event, arg1, arg2, arg3) {
+var broadcast = function broadcast (self) {
+  return function broadcastClosure (event, arg1, arg2, arg3) {
     allSockets.broadcast(self.id, event, arg1, arg2, arg3);
   };
 };
@@ -38,11 +39,11 @@ broadcast = function (self) {
  * - room (string)
  */
 
-broadcastTo = function (self) {
-  return function (room) {
+var broadcastTo = function broadcastTo (self) {
+  return function broadcastToClosure (room) {
     room = Room.get(room);
     return {
-      emit: function (event, arg1, arg2, arg3) {
+      emit: function broadcastToEmit (event, arg1, arg2, arg3) {
         room.broadcast(self.id, event, arg1, arg2, arg3);
       }
     };
@@ -58,7 +59,7 @@ broadcastTo = function (self) {
  * - room (Room) : room class
  */
 
-init = function (_room) {
+var init = function init (_room) {
   Room = _room;
   allSockets = Room.get('all');
   return module.exports;

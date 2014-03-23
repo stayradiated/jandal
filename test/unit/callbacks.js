@@ -1,11 +1,9 @@
 'use strict';
 
-var should, Callbacks, namespace;
+var should = require('should');
+var Callbacks = require('../../source/callbacks');
 
-should = require('should');
-Callbacks = require('../../source/callbacks');
-
-namespace = {
+var namespace = {
   reset: function () {
     namespace.listeners = {};
   },
@@ -36,22 +34,20 @@ describe('Callbacks', function () {
   describe(':register', function () {
 
     it('should register a new callback', function (done) {
-      var callbacks, fn, id, listener;
+      var callbacks = new Callbacks(namespace);
 
-      callbacks = new Callbacks(namespace);
-
-      fn = function (a, b, c) {
+      var fn = function (a, b, c) {
         arguments.should.eql([1,2,3]);
         done();
       };
 
-      id = callbacks.register(fn);
+      var id = callbacks.register(fn);
 
       id.should.be.have.type('number');
       callbacks.collection.should.keys(id.toString());
       callbacks.index.should.equal(id + 1);
 
-      listener = namespace.listeners['fn_' + id];
+      var listener = namespace.listeners['fn_' + id];
       listener.should.have.length(1);
       listener[0].should.have.type('function');
       listener[0](1, 2, 3);
@@ -62,31 +58,27 @@ describe('Callbacks', function () {
   describe(':exec', function () {
 
     it('should execute a callback', function (done) {
-      var callbacks, fn, id;
+      var callbacks = new Callbacks(namespace);
 
-      callbacks = new Callbacks(namespace);
-
-      fn = function (a, b, c) {
+      var fn = function (a, b, c) {
         arguments.should.eql([1, 2, 3]);
         done();
       };
 
-      id = callbacks.register(fn);
+      var id = callbacks.register(fn);
 
       callbacks.exec(id, 1, 2, 3);
     });
 
     it('should only execute a callback once', function (done) {
-      var callbacks, fn, id;
+      var callbacks = new Callbacks(namespace);
 
-      callbacks = new Callbacks(namespace);
-
-      fn = function (x) {
+      var fn = function (x) {
         x.should.equal(1);
         done();
       };
 
-      id = callbacks.register(fn);
+      var id = callbacks.register(fn);
 
       callbacks.exec(id, 1);
       callbacks.exec(id, 2);

@@ -1,15 +1,13 @@
 'use strict';
 
-var Message, regex;
-
-regex = {
+var regex = {
   callback: /\.fn\((\d+)\)$/,
   message: /^([^\(]+)\((.*)\)/,
   event: /^[^\(]+$/
 };
 
 
-Message = function (callbacks) {
+var Message = function Message (callbacks) {
   this.callbacks = callbacks;
 };
 
@@ -21,13 +19,13 @@ Message = function (callbacks) {
  * > Message
  */
 
-Message.prototype.parse = function (string) {
-  var  event, args, match, callback;
+Message.prototype.parse = function parse (string) {
   if (typeof string !== 'string') return false;
 
   // Match callbacks
   // e.g ".fn(20)"
-  match = string.match(regex.callback);
+  var callback;
+  var match = string.match(regex.callback);
   if (match !== null) {
     callback = match[1];
     string = string.slice(0, match.index);
@@ -37,13 +35,13 @@ Message.prototype.parse = function (string) {
   // e.g "foo.bar(1,2,3)"
   match = regex.message.exec(string);
   if (match === null) return false;
-  args = match[2];
+  var args = match[2];
 
   // Match event
   // e.g. "foo.bar" => ["foo", "bar"]
   match = regex.event.exec(match[1]);
   if (match === null) return false;
-  event = match[0];
+  var event = match[0];
 
   // Try parsing arguments as JSON
   try {
@@ -76,9 +74,8 @@ Message.prototype.parse = function (string) {
  */
 
 
-Message.prototype.serialize = function (event, arg1, arg2, arg3) {
-  var string, args, i, len, arg, callback;
-
+Message.prototype.serialize = function serialize (event, arg1, arg2, arg3) {
+  var args, callback;
   if (arg1 === undefined && arg2 === undefined && arg3 === undefined) {
     args = [];
   }
@@ -93,9 +90,8 @@ Message.prototype.serialize = function (event, arg1, arg2, arg3) {
   }
 
   // Check for a callback
-  len = args.length;
-  for (i = 0; i < len; i++) {
-    arg = args[i];
+  for (var i = 0, len = args.length; i < len; i++) {
+    var arg = args[i];
     if (typeof arg !== 'function') continue;
     if (i === len - 1) {
       callback = this.callbacks.register(arg);
@@ -107,7 +103,7 @@ Message.prototype.serialize = function (event, arg1, arg2, arg3) {
 
   // Convert to string
   args = JSON.stringify(args);
-  string = event;
+  var string = event;
   string += '(' + args.slice(1, -1) + ')';
   if (callback !== undefined) string += '.fn(' + callback + ')';
 

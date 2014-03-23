@@ -1,20 +1,17 @@
 'use strict';
 
-var Socket, Namespace, Callbacks, Room, Broadcast, Message,
-    EventEmitter, inherits, handle;
-
 /*
  * Dependencies
  */
 
-EventEmitter = require('events').EventEmitter;
-Namespace    = require('./namespace');
-Callbacks    = require('./callbacks');
-Room         = require('./room');
-inherits     = require('./util').inherits;
-Broadcast    = require('./broadcast').init(Room);
-handle       = require('./handle');
-Message      = require('./message');
+var EventEmitter = require('events').EventEmitter;
+var Namespace    = require('./namespace');
+var Callbacks    = require('./callbacks');
+var Room         = require('./room');
+var inherits     = require('./util').inherits;
+var Broadcast    = require('./broadcast').init(Room);
+var handle       = require('./handle');
+var Message      = require('./message');
 
 /*
  * Socket Constructor
@@ -23,7 +20,7 @@ Message      = require('./message');
  * - [handle] (string|object) : socket interface
  */
 
-Socket = function (socket, handle) {
+var Socket = function Socket (socket, handle) {
   Socket.super_.call(this);
 
   // public properties
@@ -72,19 +69,17 @@ Socket.in = Room.get;
  * - data (string)
  */
 
-Socket.prototype._process = function (data) {
-  var message, details, namespace, ns, callback, event, arg1, arg2, arg3;
+Socket.prototype._process = function _process (data) {
+  var message = this._message.parse(data);
+  var details = Namespace.parse(message.event);
 
-  message = this._message.parse(data);
-  details = Namespace.parse(message.event);
+  var arg1 = message.arg1;
+  var arg2 = message.arg2;
+  var arg3 = message.arg3;
 
-  arg1 = message.arg1;
-  arg2 = message.arg2;
-  arg3 = message.arg3;
-
-  event = details.event;
-  namespace = details.namespace;
-  ns = this._namespaces[namespace];
+  var event = details.event;
+  var namespace = details.namespace;
+  var ns = this._namespaces[namespace];
 
   if (namespace && ns) {
     ns._emit(event, arg1, arg2, arg3);
@@ -101,7 +96,7 @@ Socket.prototype._process = function (data) {
  * - name (string|object) : the name of a handler, or a handler
  */
 
-Socket.prototype._handleWith = function (name) {
+Socket.prototype._handleWith = function _handleWith (name) {
   this._handle = handle(name);
 };
 
@@ -113,7 +108,7 @@ Socket.prototype._handleWith = function (name) {
  * - socket (Object)
  */
 
-Socket.prototype.connect = function (socket, handle) {
+Socket.prototype.connect = function connect (socket, handle) {
   var self = this;
 
   if (handle) this._handleWith(handle);
@@ -121,19 +116,19 @@ Socket.prototype.connect = function (socket, handle) {
   this.socket = socket;
   this.id = this._handle.identify(socket);
 
-  this._handle.onread(this.socket, function (message) {
+  this._handle.onread(this.socket, function handleOnRead (message) {
     self._process(message);
   });
 
-  this._handle.onopen(this.socket, function (event) {
+  this._handle.onopen(this.socket, function handleOnOpen (event) {
     self._emit('socket.open', event);
   });
 
-  this._handle.onerror(this.socket, function (event) {
+  this._handle.onerror(this.socket, function handleOnError (event) {
     self._emit('socket.error', event);
   });
 
-  this._handle.onclose(this.socket, function (status, message) {
+  this._handle.onclose(this.socket, function handleOnClose (status, message) {
     self.release();
     self._emit('socket.close', status, message);
   });
@@ -148,12 +143,10 @@ Socket.prototype.connect = function (socket, handle) {
  * > namespace
  */
 
-Socket.prototype.namespace = function (name) {
-  var namespace = this._namespaces[name];
-  if (! namespace) {
-    namespace = this._namespaces[name] = new Namespace(name, this);
-  }
-  return namespace;
+Socket.prototype.namespace = function namespace (name) {
+  var ns = this._namespaces[name];
+  ns = ns ? ns : this._namespaces[name] = new Namespace(name, this);
+  return ns;
 };
 
 
@@ -165,14 +158,12 @@ Socket.prototype.namespace = function (name) {
  * - args... (mixed) : any data you want to send
  */
 
-Socket.prototype.emit = function (event, arg1, arg2, arg3) {
-  var message;
-
+Socket.prototype.emit = function emit (event, arg1, arg2, arg3) {
   if (event === 'newListener' || event === 'removeListener') {
     return this._emit(event, arg1, arg2, arg3);
   }
 
-  message = this._message.serialize(event, arg1, arg2, arg3);
+  var message = this._message.serialize(event, arg1, arg2, arg3);
 
   this._handle.write(this.socket, message);
 };
@@ -186,7 +177,7 @@ Socket.prototype.emit = function (event, arg1, arg2, arg3) {
  * - room (string)
  */
 
-Socket.prototype.join = function (room) {
+Socket.prototype.join = function join (room) {
   var index = this.rooms.indexOf(room);
   if (index < 0) {
     this.rooms.push(room);
@@ -202,7 +193,7 @@ Socket.prototype.join = function (room) {
  * - room (string)
  */
 
-Socket.prototype.leave = function (room) {
+Socket.prototype.leave = function leave (room) {
   var index = this.rooms.indexOf(room);
   if (index > -1) {
     this.rooms.splice(index, 1);
@@ -225,10 +216,9 @@ Socket.prototype.room = Room.get;
  * Release
  */
 
-Socket.prototype.release = function () {
-  var i, len;
-  len = this.rooms.length;
-  for (i = len - 1; i >= 0; i--) {
+Socket.prototype.release = function release () {
+  var len = this.rooms.length;
+  for (var i = len - 1; i >= 0; i--) {
     this.leave(this.rooms[i]);
   }
 };

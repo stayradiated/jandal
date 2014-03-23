@@ -1,11 +1,9 @@
 'use strict';
 
-var Broadcast, Room, should;
+var should = require('should');
+var Broadcast = require('../../source/broadcast');
 
-should = require('should');
-Broadcast = require('../../source/broadcast');
-
-Room = {
+var Room = {
   last: {},
   get: function (name) {
     return {
@@ -26,9 +24,7 @@ describe('Broadcast', function () {
   describe('.attach', function () {
 
     it('should use the default values', function () {
-      var obj;
-
-      obj = {};
+      var obj = {};
 
       Broadcast.attach(obj);
 
@@ -37,10 +33,8 @@ describe('Broadcast', function () {
     });
 
     it('should use a custom self and method', function () {
-      var obj, self;
-
-      obj = { id: 'obj' };
-      self = { id: 'self' };
+      var obj = { id: 'obj' };
+      var self = { id: 'self' };
 
       Broadcast.attach(self, obj, 'thing');
 
@@ -56,9 +50,7 @@ describe('Broadcast', function () {
   describe(':broadcast', function () {
 
     it('should remember itself', function () {
-      var obj;
-
-      obj = { id: 'self' };
+      var obj = { id: 'self' };
       Broadcast.attach(obj);
 
       obj.broadcast('event', 1, 2, 3);
@@ -71,9 +63,7 @@ describe('Broadcast', function () {
   describe(':broadcastTo', function () {
 
     it('should broadcast to a room', function () {
-      var obj;
-
-      obj = { id: 'self' };
+      var obj = { id: 'self' };
       Broadcast.attach(obj);
 
       obj.broadcast.to('my_room').emit('event', 1, 2, 3);

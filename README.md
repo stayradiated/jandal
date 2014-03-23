@@ -769,6 +769,7 @@ include it via `require('jandal/client');`.
 - Replace `room.destroy()` with `room.empty()`. No longer destroys room, just
   removes all the connected sockets.
 - Remove `Room.remove()`.
+- Switch from `var = a, b, c;` to `var a = 1; \n var b = 2; var c = 3;`
 
 ## 0.0.14
 

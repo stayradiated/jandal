@@ -1,19 +1,17 @@
 'use strict';
 
-var Callbacks, PREFIX;
-
 /*
  * Constants
  */
 
-PREFIX = 'fn_';
+var PREFIX = 'fn_';
 
 
 /*
  * Callbacks Constructor
  */
 
-Callbacks = function (namespace) {
+var Callbacks = function Callbacks (namespace) {
   this.collection = {};
   this.index = 0;
   this.namespace = namespace;
@@ -27,14 +25,12 @@ Callbacks = function (namespace) {
  * > callback id (int)
  */
 
-Callbacks.prototype.register = function (fn) {
-  var self, id;
-
-  self = this;
-  id = this.index++;
+Callbacks.prototype.register = function register (fn) {
+  var self = this;
+  var id = this.index++;
   this.collection[id] = fn;
 
-  this.namespace.once(PREFIX + id, function(arg1, arg2, arg3) {
+  this.namespace.once(PREFIX + id, function callbackListener (arg1, arg2, arg3) {
     self.exec(id, arg1, arg2, arg3);
   });
 
@@ -50,7 +46,7 @@ Callbacks.prototype.register = function (fn) {
  * - args (array) : arguments
  */
 
-Callbacks.prototype.exec = function (id, arg1, arg2, arg3) {
+Callbacks.prototype.exec = function exec (id, arg1, arg2, arg3) {
   if (! this.collection.hasOwnProperty(id)) return;
   this.collection[id](arg1, arg2, arg3);
   delete this.collection[id];
@@ -66,9 +62,9 @@ Callbacks.prototype.exec = function (id, arg1, arg2, arg3) {
  */
 
 
-Callbacks.prototype.getFn = function (id) {
+Callbacks.prototype.getFn = function getFn (id) {
   var self = this;
-  return function (arg1, arg2, arg3) {
+  return function getFnClosure (arg1, arg2, arg3) {
     self.namespace.emit(PREFIX + id, arg1, arg2, arg3);
   };
 };

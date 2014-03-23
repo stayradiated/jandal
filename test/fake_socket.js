@@ -1,14 +1,14 @@
 'use strict';
 
-var Room, Namespace, Broadcast, Socket, emitFn, lastMessage;
 
-Broadcast = require('../source/broadcast');
-Room = require('../source/room');
-Namespace = require('../source/namespace');
+var Broadcast = require('../source/broadcast');
+var Room = require('../source/room');
+var Namespace = require('../source/namespace');
 
-lastMessage = {};
+var lastMessage = {};
+var emitFn;
 
-Socket = function () {
+var Socket = function () {
   this.id = ++Socket.id;
   Broadcast.attach(this);
   Room.get('all')._join(this);

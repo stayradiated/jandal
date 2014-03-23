@@ -1,11 +1,9 @@
 'use strict';
 
-var should, Message, callbacks;
+var should = require('should');
+var Message = require('../../source/message');
 
-should = require('should');
-Message = require('../../source/message');
-
-callbacks = {
+var callbacks = {
   fn: function () {},
   register: function () {
     return 0;
@@ -21,6 +19,7 @@ describe('Message', function () {
   });
 
   describe(':toString', function () {
+
     var message;
 
     before(function () {
@@ -28,9 +27,8 @@ describe('Message', function () {
     });
 
     it('should serialize messages', function () {
-      var string;
 
-      string = message.serialize('test', 'one', 'two', 'three');
+      var string = message.serialize('test', 'one', 'two', 'three');
       string.should.equal('test("one","two","three")');
 
       string = message.serialize('test', 'one', function () {});
@@ -52,9 +50,9 @@ describe('Message', function () {
     });
 
     it('should parse messages', function () {
-      var string;
 
-      string = 'socket.test("one","two","three")';
+      var string = 'socket.test("one","two","three")';
+
       message.parse(string).should.eql({
         event: 'socket.test',
         arg1: 'one',
@@ -89,9 +87,8 @@ describe('Message', function () {
     });
 
     it('should handle invalid messages', function () {
-      var string;
 
-      string = 'socket.test(one,two,three)';
+      var string = 'socket.test(one,two,three)';
       message.parse(string).should.equal(false);
 
       string = 'foo bar';

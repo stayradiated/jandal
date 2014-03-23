@@ -1,14 +1,12 @@
 'use strict';
 
-var Namespace, Broadcast, EventEmitter, inherits, REGEX; 
-
 /*
  * Dependencies
  */
 
-Broadcast = require('./broadcast');
-EventEmitter = require('events').EventEmitter;
-inherits = require('./util').inherits;
+var Broadcast = require('./broadcast');
+var EventEmitter = require('events').EventEmitter;
+var inherits = require('./util').inherits;
 
 
 /*
@@ -19,7 +17,7 @@ inherits = require('./util').inherits;
  * - item (room) : a collection of sockets
  */
 
-Namespace = function (name, item) {
+var Namespace = function Namespace (name, item) {
   Namespace.super_.call(this);
 
   this.name = name;
@@ -37,7 +35,7 @@ inherits(Namespace, EventEmitter);
 Namespace.prototype._emit = EventEmitter.prototype.emit;
 
 
-Namespace.parse = function (string) {
+Namespace.parse = function parse (string) {
   var namespace, event;
   string = string.split('.');
   if (string.length === 2) {
@@ -59,7 +57,7 @@ Namespace.parse = function (string) {
  * - args... (mixed) : any other data you want to send
  */
 
-Namespace.prototype.emit = function (event, arg1, arg2, arg3) {
+Namespace.prototype.emit = function emit (event, arg1, arg2, arg3) {
   event = this.name + '.' + event;
   this.item.emit(event, arg1, arg2, arg3);
 };
@@ -72,7 +70,7 @@ Namespace.prototype.emit = function (event, arg1, arg2, arg3) {
  * - args... (mixed)
  */
 
-Namespace.prototype.broadcast = function (event, arg1, arg2, arg3) {
+Namespace.prototype.broadcast = function broadcast (event, arg1, arg2, arg3) {
   event = this.name + '.' + event;
   this._broadcast(event, arg1, arg2, arg3);
 };

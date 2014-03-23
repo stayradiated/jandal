@@ -1,10 +1,10 @@
-var should, Room, Namespace, broadcastFrom, Socket;
+'use strict';
 
-should    = require('should');
-Room      = require('../../source/room');
-Namespace = require('../../source/namespace');
-Broadcast = require('../../source/broadcast');
-Socket    = require('../fake_socket');
+var should    = require('should');
+var Room      = require('../../source/room');
+var Namespace = require('../../source/namespace');
+var Broadcast = require('../../source/broadcast');
+var Socket    = require('../fake_socket');
 
 describe('Room', function () {
 
@@ -17,35 +17,28 @@ describe('Room', function () {
   });
 
   it('can create rooms', function () {
-    var room;
-
-    room = Room.get('something');
+    var room = Room.get('something');
     room.id.should.equal('something');
   });
 
   it('one room per room id', function () {
-    var room1, room2;
-
-    room1 = Room.get('anything');
-    room2 = Room.get('anything');
+    var room1 = Room.get('anything');
+    var room2 = Room.get('anything');
 
     room1.should.equal(room2);
   });
 
   it('sockets can join rooms', function () {
-    var room;
-
-    room = Room.get('chicken');
+    var room = Room.get('chicken');
     room._join(new Socket());
 
     room.length().should.equal(1);
   });
 
   it('sockets can leave rooms', function () {
-    var room, socket;
-    socket = new Socket();
+    var socket = new Socket();
 
-    room = Room.get('pineapple');
+    var room = Room.get('pineapple');
     room.length().should.equal(0);
 
     room._join(socket);
@@ -56,10 +49,8 @@ describe('Room', function () {
   });
 
   it('check if a socket is in a room', function () {
-    var room, socket;
-
-    room = Room.get('my_room');
-    socket = new Socket();
+    var room = Room.get('my_room');
+    var socket = new Socket();
 
     room._join(socket);
     room.contains(socket).should.equal(true);
@@ -69,21 +60,17 @@ describe('Room', function () {
   });
 
   it('get another room', function () {
-    var room1, room2;
-
-    room1 = Room.get('room1');
-    room2 = Room.get('room2');
+    var room1 = Room.get('room1');
+    var room2 = Room.get('room2');
 
     Room.get('room2').should.equal(room2);
   });
 
   it('emit to all sockets in a room', function () {
-    var room, socket1, socket2, callCount;
-
-    room = Room.get('special');
-    socket1 = new Socket();
-    socket2 = new Socket();
-    callCount = 0;
+    var room = Room.get('special');
+    var socket1 = new Socket();
+    var socket2 = new Socket();
+    var callCount = 0;
 
     new Socket.listen(function (event) {
       callCount++;
@@ -99,13 +86,11 @@ describe('Room', function () {
   });
 
   it('broadcast to all sockets in a room', function () {
-    var room, socket1, socket2, sender, callCount;
-
-    room = Room.get('broadcast');
-    socket1 = new Socket();
-    socket2 = new Socket();
-    sender = new Socket();
-    callCount = 0;
+    var room = Room.get('broadcast');
+    var socket1 = new Socket();
+    var socket2 = new Socket();
+    var sender = new Socket();
+    var callCount = 0;
 
     room._join(socket1);
     room._join(socket2);
@@ -122,15 +107,15 @@ describe('Room', function () {
   });
 
   it('emit to a room from a namespace', function () {
-    var room, socket1, socket2, namespace, callCount;
+    var room = Room.get('room');
+    var socket1 = new Socket();
+    var socket2 = new Socket();
 
-    room = Room.get('room');
-    socket1 = new Socket();
-    socket2 = new Socket();
     room._join(socket1);
     room._join(socket2);
-    namespace = room.namespace('namespace');
-    callCount = 0;
+
+    var namespace = room.namespace('namespace');
+    var callCount = 0;
 
     new Socket.listen(function (event) {
       event.should.equal('namespace.event');
@@ -142,16 +127,15 @@ describe('Room', function () {
   });
 
   it('broadcast to a room from a namespace', function () {
-    var room, socket1, socket2, namespace, callCount;
+    var room = Room.get('room');
+    var socket1 = new Socket();
+    var socket2 = new Socket();
+    var socket3 = new Socket();
+    var callCount = 0;
 
-    room = Room.get('room');
-    socket1 = new Socket();
-    socket2 = new Socket();
-    socket3 = new Socket();
     room._join(socket1);
     room._join(socket2);
     room._join(socket3);
-    callCount = 0;
 
     new Socket.listen(function (event) {
       this.should.not.equal(socket1);
@@ -159,7 +143,7 @@ describe('Room', function () {
       callCount++;
     });
 
-    namespace = socket1.namespace('namespace');
+    var namespace = socket1.namespace('namespace');
 
     namespace.broadcast('event');
     callCount.should.equal(2);

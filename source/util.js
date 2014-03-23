@@ -1,14 +1,12 @@
 'use strict';
 
-var util;
-
-util = {};
+var util = {};
 
 /*
- * util.inherits
+ * util.inherits for browsers
  */
 
-util.inherits = function(ctor, superCtor) {
+util.inherits = function inherits (ctor, superCtor) {
   ctor.super_ = superCtor;
   ctor.prototype = Object.create(superCtor.prototype, {
     constructor: {

@@ -1,54 +1,55 @@
 'use strict';
 
-var handles, handle, websocketsId;
-websocketsId = 0;
+var websocketsId = 0;
 
 /*
  * Can you handle the jandal?
  */
 
-handles = {
+var handles = {
 
   stream: {
-    identify: function (socket) {
+    identify: function streamIdentify (socket) {
       return socket.id;
     },
-    write: function (socket, message) {
+    write: function streamWrite (socket, message) {
       socket.write(message);
     },
-    onread: function (socket, fn) {
+    onread: function streamOnRead (socket, fn) {
       socket.on('data', fn);
     },
-    onclose: function (socket, fn) {
+    onclose: function streamOnClose (socket, fn) {
       socket.on('close', fn);
     },
-    onerror: function(socket, fn) {
+    onerror: function streamOnError (socket, fn) {
       socket.on('error', fn);
     },
-    onopen: function(socket, fn) {
+    onopen: function streamOnOpen (socket, fn) {
       setTimeout(fn, 0);
     }
   },
 
   websocket: {
-    identify: function (socket) {
+    identify: function websocketWrite (socket) {
       if (socket.hasOwnProperty('id')) return socket.id;
       socket.id = ++websocketsId;
       return socket.id;
     },
-    write: function (socket, message) {
+    write: function websocketWrite (socket, message) {
       socket.send(message);
     },
-    onread: function (socket, fn) {
-      socket.onmessage = function (e) { fn(e.data); };
+    onread: function websocketOnRead (socket, fn) {
+      socket.onmessage = function websocketOnReadOnMessage (e) {
+        fn(e.data);
+      };
     },
-    onclose: function (socket, fn) {
+    onclose: function websocketOnClose (socket, fn) {
       socket.onclose = fn;
     },
-    onerror: function(socket, fn) {
+    onerror: function websocketOnError (socket, fn) {
       socket.onerror = fn;
     },
-    onopen: function(socket, fn) {
+    onopen: function websocketOnOpen (socket, fn) {
       socket.onopen = fn;
     }
   }
@@ -64,17 +65,12 @@ handles = {
  * > handle
  */
 
-handle = function (name) {
-  var handle;
-  if (typeof name === 'object') {
-    handle = name;
-  } else {
-    handle = handles[name];
-    if (! handle) {
-      throw new Error('Jandal handler "' + name + '"could not be found');
-    }
+var handle = function handle (name) {
+  var handler = typeof name === 'object' ? name : handles[name];
+  if (! handler) {
+    throw new Error('Jandal handler "' + name + '"could not be found');
   }
-  return handle;
+  return handler;
 };
 
 
