@@ -21,7 +21,7 @@
     "listen"
   ],
   "author": "George Czabania",
-  "license": "BSD-2-Clause",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/stayradiated/jandal/issues"
   },
