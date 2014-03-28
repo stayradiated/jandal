@@ -28,9 +28,9 @@ var handles = {
       setTimeout(fn, 0);
     },
     release: function streamRelease (socket) {
-      socket.removeListener('data');
-      socket.removeListener('close');
-      socket.removeListener('error');
+      socket.removeAllListeners('data');
+      socket.removeAllListeners('close');
+      socket.removeAllListeners('error');
     }
   },
 

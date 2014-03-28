@@ -21,7 +21,7 @@ var Message      = require('./message');
  */
 
 var Socket = function Socket (socket, handle) {
-  Socket.super_.call(this);
+  Socket.__super__.call(this);
 
   // public properties
   this.rooms = [];
@@ -60,6 +60,13 @@ Socket.all = Room.get('all');
  */
 
 Socket.in = Room.get;
+
+
+/*
+ * (Static) Rooms
+ */
+
+Socket.rooms = Room.rooms;
 
 
 /*
@@ -132,6 +139,24 @@ Socket.prototype.connect = function connect (socket, handle) {
     self.release();
     self._emit('socket.close', status, message);
   });
+};
+
+
+/*
+ * Disconnnect
+ * The opposite of `connect`.
+ *
+ * Remove the socket from any rooms it is in.
+ * Also release control of the socket.
+ */
+
+Socket.prototype.disconnect = function disconnect () {
+  this._handle.release(this.socket);
+
+  var len = this.rooms.length;
+  for (var i = len - 1; i >= 0; i--) {
+    this.leave(this.rooms[i]);
+  }
 };
 
 
@@ -215,16 +240,13 @@ Socket.prototype.room = Room.get;
  * Release
  *
  * Forget everything.
+ * TODO: Possibly overkill.
  */
 
 Socket.prototype.release = function release () {
+  if (! this._message) return;
 
-  this._handle.release(this.socket);
-
-  var len = this.rooms.length;
-  for (var i = len - 1; i >= 0; i--) {
-    this.leave(this.rooms[i]);
-  }
+  this.disconnect();
 
   for (var key in this._namespaces) {
     this._namespaces[key]._release();

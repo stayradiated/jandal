@@ -64,7 +64,7 @@ Callbacks.prototype.exec = function exec (id, arg1, arg2, arg3) {
 
 Callbacks.prototype.getFn = function getFn (id) {
   var self = this;
-  return function getFnClosure (arg1, arg2, arg3) {
+  return function callback (arg1, arg2, arg3) {
     self.namespace.emit(PREFIX + id, arg1, arg2, arg3);
   };
 };

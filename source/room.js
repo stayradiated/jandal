@@ -196,14 +196,12 @@ Room.prototype.empty = function empty () {
 
 /*
  * Release
- * Forget everything
+ * Empty the room and delete it from Room.rooms
  */
 
 Room.prototype.release = function () {
   this.empty();
-  delete this.id;
-  delete this.sockets;
-  delete this._namespaces;
+  delete Room.rooms[this.id];
 };
 
 

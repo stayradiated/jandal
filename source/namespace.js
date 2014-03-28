@@ -18,7 +18,7 @@ var inherits = require('./util').inherits;
  */
 
 var Namespace = function Namespace (name, item) {
-  Namespace.super_.call(this);
+  Namespace.__super__.call(this);
 
   this.name = name;
   this.item = item;
