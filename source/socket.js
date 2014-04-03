@@ -136,7 +136,7 @@ Socket.prototype.connect = function connect (socket, handle) {
   });
 
   this._handle.onclose(this.socket, function handleOnClose (status, message) {
-    self.release();
+    self.disconnect();
     self._emit('socket.close', status, message);
   });
 };
